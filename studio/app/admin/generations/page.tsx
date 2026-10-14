@@ -40,7 +40,9 @@ export default async function AdminGenerationsPage({
         {FILTERS.map((f) => (
           <Link
             key={f.label}
-            href={f.query ? `/admin/generations?${f.query}` : "/admin/generations"}
+            href={
+              f.query ? `/admin/generations?${f.query}` : "/admin/generations"
+            }
             aria-current={f.query === current ? "page" : undefined}
             className={cn(
               "inline-flex h-8 items-center rounded-full px-3 text-q-caption-sm-medium",

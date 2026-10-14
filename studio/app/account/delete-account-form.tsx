@@ -30,7 +30,10 @@ export function DeleteAccountForm({ email }: { email: string }) {
         aria-invalid={state.error ? true : undefined}
       />
       {state.error ? (
-        <p role="alert" className="text-q-caption-sm-medium text-q-state-error-fg">
+        <p
+          role="alert"
+          className="text-q-caption-sm-medium text-q-state-error-fg"
+        >
           {state.error}
         </p>
       ) : null}

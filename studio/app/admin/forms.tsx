@@ -16,13 +16,19 @@ import {
 function Result({ state }: { state: AdminFormState }) {
   if (state.error)
     return (
-      <p role="alert" className="text-q-caption-sm-medium text-q-state-error-fg">
+      <p
+        role="alert"
+        className="text-q-caption-sm-medium text-q-state-error-fg"
+      >
         {state.error}
       </p>
     )
   if (state.message)
     return (
-      <p role="status" className="text-q-caption-sm-medium text-q-text-secondary">
+      <p
+        role="status"
+        className="text-q-caption-sm-medium text-q-text-secondary"
+      >
         {state.message}
       </p>
     )

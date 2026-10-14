@@ -18,7 +18,9 @@ export async function deleteAccountAction(
   const session = await getSession()
   const userId = userIdOf(session)
   if (!userId) redirect("/login?callbackUrl=/account")
-  const typed = String(formData.get("confirm") ?? "").trim().toLowerCase()
+  const typed = String(formData.get("confirm") ?? "")
+    .trim()
+    .toLowerCase()
   if (!session?.user?.email || typed !== session.user.email.toLowerCase())
     return { error: "Type your email address exactly to confirm." }
 

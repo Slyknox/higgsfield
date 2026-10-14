@@ -23,6 +23,7 @@ export default async function AdminUsersPage({
       <Section title="Find a user">
         <form className="flex gap-2" role="search">
           <Input
+            type="search"
             name="q"
             defaultValue={q}
             placeholder="Part of an email address"
@@ -69,7 +70,9 @@ export default async function AdminUsersPage({
                     <td className="py-2 pr-3 text-right tabular-nums">
                       {u.generations}
                     </td>
-                    <td className="py-2 text-right tabular-nums">{u.balance}</td>
+                    <td className="py-2 text-right tabular-nums">
+                      {u.balance}
+                    </td>
                   </tr>
                 ))}
               </tbody>

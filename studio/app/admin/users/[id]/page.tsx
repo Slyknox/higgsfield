@@ -51,7 +51,10 @@ export default async function AdminUserPage({
           <table className="w-full text-q-body-sm-regular">
             <tbody>
               {ledger.map((e) => (
-                <tr key={e.id} className="border-t border-white/5 first:border-0">
+                <tr
+                  key={e.id}
+                  className="border-t border-white/5 first:border-0"
+                >
                   <td className="py-2 pr-3 whitespace-nowrap text-q-text-secondary">
                     {dateTime(e.createdAt)}
                   </td>

@@ -1,7 +1,11 @@
 import Link from "next/link"
 
 import { Section, Stat } from "@/components/site/page/section"
-import { getOverview, listGenerations, STUCK_MINUTES } from "@/lib/admin/service"
+import {
+  getOverview,
+  listGenerations,
+  STUCK_MINUTES,
+} from "@/lib/admin/service"
 import { getBillingConfig } from "@/lib/server/billing-env"
 import { getPool } from "@/lib/server/db"
 

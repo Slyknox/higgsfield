@@ -21,7 +21,8 @@ export async function grantCreditsAction(
   const userId = Number(formData.get("userId"))
   const delta = Number(formData.get("delta"))
   const note = String(formData.get("note") ?? "")
-  if (!Number.isInteger(userId) || userId <= 0) return { error: "Unknown user." }
+  if (!Number.isInteger(userId) || userId <= 0)
+    return { error: "Unknown user." }
   try {
     const balance = await adjustCredits(getPool(), userId, delta, note, adminId)
     revalidatePath(`/admin/users/${userId}`)

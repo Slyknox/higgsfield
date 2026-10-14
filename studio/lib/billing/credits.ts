@@ -36,7 +36,10 @@ export async function ensureAccount(
   )
 }
 
-export async function getBalance(db: Queryable, userId: number): Promise<number> {
+export async function getBalance(
+  db: Queryable,
+  userId: number
+): Promise<number> {
   const { rows } = await db.query<{ balance: number }>(
     "select balance from credit_balances where user_id = $1",
     [userId]

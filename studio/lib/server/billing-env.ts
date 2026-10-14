@@ -12,7 +12,11 @@ const schema = z.object({
     .enum(["true", "false", "1", "0", ""])
     .default("false")
     .transform((v) => v === "true" || v === "1"),
-  CREDIT_MARKUP: z.coerce.number().min(1).max(20).default(DEFAULT_CREDIT_MARKUP),
+  CREDIT_MARKUP: z.coerce
+    .number()
+    .min(1)
+    .max(20)
+    .default(DEFAULT_CREDIT_MARKUP),
   SIGNUP_CREDITS: z.coerce.number().int().min(0).max(100_000).default(0),
 })
 

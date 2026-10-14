@@ -17,7 +17,9 @@ export function AdminNav() {
     <nav aria-label="Admin" className="flex items-center gap-1">
       {LINKS.map((l) => {
         const active =
-          l.href === "/admin" ? pathname === "/admin" : pathname.startsWith(l.href)
+          l.href === "/admin"
+            ? pathname === "/admin"
+            : pathname.startsWith(l.href)
         return (
           <Link
             key={l.href}

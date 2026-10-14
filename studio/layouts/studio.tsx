@@ -306,9 +306,7 @@ export function StudioTemplate({
       : galleryItems
 
   return (
-    <div
-      className={cn("flex h-dvh overflow-hidden bg-background", className)}
-    >
+    <div className={cn("flex h-dvh overflow-hidden bg-background", className)}>
       <StudioSidebar
         title={title}
         view={view}

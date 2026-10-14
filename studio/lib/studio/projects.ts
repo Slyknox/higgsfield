@@ -33,11 +33,15 @@ async function send(
   const res = await fetch(path, {
     method: init.method,
     headers:
-      init.body === undefined ? undefined : { "Content-Type": "application/json" },
+      init.body === undefined
+        ? undefined
+        : { "Content-Type": "application/json" },
     body: init.body === undefined ? undefined : JSON.stringify(init.body),
   })
   if (!res.ok) {
-    const body = (await res.json().catch(() => null)) as { error?: string } | null
+    const body = (await res.json().catch(() => null)) as {
+      error?: string
+    } | null
     throw new Error(body?.error ?? "Couldn't save your project. Try again.")
   }
   return res
@@ -94,7 +98,9 @@ export const useProjects = create<ProjectsState>()((set, get) => {
               method: "POST",
               body: { id: p.id, name: p.name, createdAt: p.createdAt },
             })
-            imported.push(((await created.json()) as { project: Project }).project)
+            imported.push(
+              ((await created.json()) as { project: Project }).project
+            )
           } catch {
             // Ids that aren't UUIDs can't be imported; the rest still are.
           }
