@@ -1,0 +1,35 @@
+[project]
+name = "studio-jev-tools"
+version = "0.1.0"
+description = "Developer-only JEV browser runs: Higgsfield UI inventory and studio smoke tests."
+requires-python = ">=3.12"
+# Pinned to an audited commit of the fork. Bump deliberately, after reading the diff.
+dependencies = [
+  "jev-ultrafast @ git+https://github.com/Slyknox/jev-ultrafast@1231850a0bf1a0c0341fe408ef1668dbbfdfac46",
+]
+
+[project.scripts]
+jev-inventory = "jev_tools.inventory:main"
+jev-smoke = "jev_tools.smoke:main"
+
+[dependency-groups]
+dev = ["pytest>=8.4,<9"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.metadata]
+allow-direct-references = true
+
+[tool.hatch.build.targets.wheel]
+packages = ["jev_tools"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
