@@ -1,6 +1,7 @@
 "use client"
 
-import { useMemo, useState, type ChangeEvent } from "react"
+import { useCallback, useEffect, useMemo, useState, type ChangeEvent } from "react"
+import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowLeftRight,
   ImagePlus,
@@ -32,6 +33,7 @@ import type { ModelEntry, Surface } from "@/generation/catalog"
 import { modelArt } from "@/lib/site/model-art"
 import { modelMeta } from "@/lib/site/model-meta"
 import { modeLabel, modeOf, modesFor, type ModeId } from "@/lib/site/model-modes"
+import { saveDraft, takeDraft } from "@/lib/studio/draft"
 import { useStudioDock } from "@/lib/studio/use-studio-dock"
 import { cn } from "@/lib/utils"
 
@@ -137,6 +139,8 @@ export interface GeneratorTemplateProps {
   headline: string
   initialModel?: string
   onUserModelChange?: (model: ModelEntry) => void
+  /** Signed-out users are sent to sign in when they press Generate. */
+  signedIn: boolean
   className?: string
 }
 
@@ -150,8 +154,12 @@ export function GeneratorTemplate({
   headline,
   initialModel,
   onUserModelChange,
+  signedIn,
   className,
 }: GeneratorTemplateProps) {
+  const router = useRouter()
+  const pathname = usePathname()
+  const params = useSearchParams()
   const [tab, setTab] = useState<"history" | "how">("history")
   const { dock, runs, galleryItems, key } = useStudioDock({
     initialModel,
@@ -179,6 +187,24 @@ export function GeneratorTemplate({
     onMediaRoleChange: dock.onMediaRoleChange,
     library: dock.library,
   }
+  const { onPromptChange } = dock
+  // Bring back the prompt typed before the sign-in detour.
+  useEffect(() => {
+    const draft = takeDraft(surface)
+    if (draft) onPromptChange(draft)
+  }, [surface, onPromptChange])
+
+  const generate = useCallback(() => {
+    if (!signedIn) {
+      saveDraft(surface, dock.prompt)
+      const query = params.toString()
+      const back = query ? `${pathname}?${query}` : pathname
+      router.push(`/login?callbackUrl=${encodeURIComponent(back)}`)
+      return
+    }
+    dock.onGenerate()
+  }, [dock, params, pathname, router, signedIn, surface])
+
   const generating = dock.generating ?? false
   const canceling = dock.canceling ?? false
 
@@ -249,7 +275,7 @@ export function GeneratorTemplate({
               onKeyDown={(e) => {
                 if (e.key === "Enter" && (e.metaKey || e.ctrlKey) && !generating && !dock.generateDisabled) {
                   e.preventDefault()
-                  dock.onGenerate()
+                  generate()
                 }
               }}
               placeholder={PLACEHOLDER[surface]}
@@ -292,7 +318,7 @@ export function GeneratorTemplate({
           ) : null}
           <button
             type="button"
-            onClick={generating ? dock.onCancel : dock.onGenerate}
+            onClick={generating ? dock.onCancel : generate}
             disabled={canceling || (!generating && dock.generateDisabled)}
             title={!generating && dock.generateDisabled ? dock.disabledReason : undefined}
             className={cn(

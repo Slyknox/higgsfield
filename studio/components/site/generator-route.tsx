@@ -17,9 +17,11 @@ const HEADLINES: Record<Surface, string> = {
 function GeneratorInner({
   surface,
   initialView,
+  signedIn,
 }: {
   surface?: Surface
   initialView: "home" | "all"
+  signedIn: boolean
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -45,6 +47,7 @@ function GeneratorInner({
         headline={HEADLINES[surface]}
         initialModel={model?.id}
         onUserModelChange={onUserModelChange}
+        signedIn={signedIn}
         className={shell}
       />
     )
@@ -63,14 +66,16 @@ function GeneratorInner({
 export function GeneratorRoute({
   surface,
   initialView = "home",
+  signedIn,
 }: {
   surface?: Surface
   initialView?: "home" | "all"
+  signedIn: boolean
 }) {
   return (
     <div style={{ ["--top-nav" as string]: `${TOP_NAV_HEIGHT}px` }}>
       <Suspense>
-        <GeneratorInner surface={surface} initialView={initialView} />
+        <GeneratorInner surface={surface} initialView={initialView} signedIn={signedIn} />
       </Suspense>
     </div>
   )

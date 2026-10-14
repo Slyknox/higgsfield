@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTransition } from "react"
 import { NavigationMenu } from "@base-ui/react/navigation-menu"
 import {
   ChevronDown,
@@ -9,6 +10,7 @@ import {
   Film,
   FolderOpen,
   ImageIcon,
+  LogOut,
   Menu,
   MoveRight,
   Repeat,
@@ -22,15 +24,22 @@ import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { signOutAction } from "@/app/login/actions"
 import { MODELS, type Surface } from "@/generation/catalog"
 import { BRAND } from "@/lib/site/brand"
 import { modelMeta } from "@/lib/site/model-meta"
 import { cn } from "@/lib/utils"
 
 export const TOP_NAV_HEIGHT = 56
+
+/** The signed-in user as the nav needs it; null when signed out. */
+export type NavUser = { email: string; name: string | null; role: "user" | "admin" }
 
 type Feature = {
   label: string
@@ -153,7 +162,37 @@ const linkClass = (active: boolean) =>
  * TopNav — the site header: brand, Explore, Image and Video (each opening a
  * features + models menu), and Assets. Collapses into one menu on narrow screens.
  */
-export function TopNav() {
+function AccountMenu({ user }: { user: NavUser }) {
+  const [pending, startTransition] = useTransition()
+  const initial = (user.name || user.email).trim().charAt(0).toUpperCase()
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        aria-label={`Account menu for ${user.email}`}
+        className="inline-flex size-8 items-center justify-center rounded-full bg-white/10 text-q-caption-sm-semi-bold outline-none hover:bg-white/15 focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        {initial}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="min-w-56">
+        {/* Base UI requires a group label to sit inside a group. */}
+        <DropdownMenuGroup>
+          <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <DropdownMenuItem render={<Link href="/assets" />}>
+          <FolderOpen aria-hidden />
+          Assets
+        </DropdownMenuItem>
+        <DropdownMenuItem disabled={pending} onClick={() => startTransition(() => signOutAction())}>
+          <LogOut aria-hidden />
+          {pending ? "Signing out…" : "Sign out"}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
+  )
+}
+
+export function TopNav({ user }: { user: NavUser | null }) {
   const pathname = usePathname()
   const surfaces = SURFACES.filter((s) => MODELS.some((m) => m.surface === s.surface))
   const isActive = (href: string) =>
@@ -213,6 +252,25 @@ export function TopNav() {
           <FolderOpen aria-hidden />
           Assets
         </Link>
+
+        {user ? (
+          <AccountMenu user={user} />
+        ) : (
+          <>
+            <Link
+              href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+              className={cn(buttonVariants({ variant: "ghost", size: "default" }), "hidden sm:inline-flex")}
+            >
+              Log in
+            </Link>
+            <Link
+              href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
+              className="inline-flex h-8 items-center rounded-lg bg-white px-3 text-q-body-sm-medium text-black transition-colors hover:bg-white/85"
+            >
+              Sign up
+            </Link>
+          </>
+        )}
 
         <DropdownMenu>
           <DropdownMenuTrigger
