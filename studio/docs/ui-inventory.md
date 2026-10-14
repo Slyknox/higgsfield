@@ -92,3 +92,12 @@ built (Phase 5). Promo prices expire.
 
 Paths seen in console links: `higgsfield/genjutsu/motion-transfer/v1.0`
 (Genjutsu, not installed yet) and `kling-video/v3.0/std/text-to-video`.
+
+## Automated inventory (JEV)
+
+`tools/jev` (developer-only) rewrites the index below after each inventory run.
+Run it locally: see `tools/jev/README.md`.
+
+<!-- jev:inventory:start -->
+No JEV inventory runs yet.
+<!-- jev:inventory:end -->
