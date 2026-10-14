@@ -15,6 +15,7 @@ import {
   MoveRight,
   Repeat,
   Scissors,
+  UserRound,
   type LucideIcon,
 } from "lucide-react"
 
@@ -230,6 +231,10 @@ function AccountMenu({ user }: { user: NavUser }) {
         <DropdownMenuItem render={<Link href="/assets" />}>
           <FolderOpen aria-hidden />
           Assets
+        </DropdownMenuItem>
+        <DropdownMenuItem render={<Link href="/account" />}>
+          <UserRound aria-hidden />
+          Account
         </DropdownMenuItem>
         <DropdownMenuItem
           disabled={pending}
