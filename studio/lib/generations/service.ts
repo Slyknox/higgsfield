@@ -6,6 +6,13 @@ import type { GenerationStatus as PlatformStatus } from "@/generation/platform"
 import { PlatformError } from "@/generation/platform"
 import { toPlatform } from "@/generation/to-platform"
 
+import {
+  debitForGeneration,
+  ensureAccount,
+  refundGeneration,
+} from "@/lib/billing/credits"
+import { priceOf } from "@/lib/billing/pricing"
+
 import type { MediaStorage } from "./storage"
 import {
   IN_FLIGHT_STATUSES,
@@ -36,7 +43,17 @@ export interface GenerationDeps {
   /** Webhook URL for a generation, or undefined to rely on polling. */
   webhookUrlFor?: (generationId: string) => string | undefined
   maxConcurrent?: number
+  /** Unset or `enabled: false`: generations are free and nothing is debited. */
+  billing?: BillingConfig
   log?: (message: string, details?: Record<string, unknown>) => void
+}
+
+export type BillingConfig = {
+  enabled: boolean
+  /** Retail price = Higgsfield's cost × markup. */
+  markup: number
+  /** Credits a new account starts with. */
+  signupCredits: number
 }
 
 const MAX_PROMPT = 5000
@@ -146,6 +163,10 @@ export async function createGeneration(
   projectId?: string
 ): Promise<GenerationDTO> {
   const { model, path, body } = prepare(plane)
+  const settings = parseSettings(model, plane.settings ?? {})
+  const billing = deps.billing?.enabled ? deps.billing : undefined
+  const cost = billing ? priceOf(model, settings, billing.markup).credits : 0
+  if (billing) await ensureAccount(deps.db, userId, billing.signupCredits)
   const max = deps.maxConcurrent ?? 4
   const client = await deps.db.connect()
   let row: Row
@@ -163,8 +184,8 @@ export async function createGeneration(
         `You can run ${max} generations at once. Wait for one to finish.`
       )
     const inserted = await client.query<Row>(
-      `insert into generations (user_id, project_id, surface, model_id, model_path, prompt, settings, media, status)
-       values ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_submit') returning ${COLUMNS}`,
+      `insert into generations (user_id, project_id, surface, model_id, model_path, prompt, settings, media, status, cost)
+       values ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_submit', $9) returning ${COLUMNS}`,
       [
         userId,
         projectId ?? null,
@@ -172,11 +193,14 @@ export async function createGeneration(
         model.id,
         path,
         String(plane.prompt?.text ?? "").trim(),
-        JSON.stringify(parseSettings(model, plane.settings ?? {})),
+        JSON.stringify(settings),
         JSON.stringify(plane.media ?? {}),
+        cost,
       ]
     )
     row = inserted.rows[0]!
+    // Debit in the same transaction: no credits, no row, nothing submitted.
+    await debitForGeneration(client, userId, row.id, cost)
     await client.query("commit")
   } catch (error) {
     await client.query("rollback")
@@ -218,6 +242,7 @@ export async function createGeneration(
      where id = $1 and status = 'pending_submit' returning ${COLUMNS}`,
     [row.id, submitFailure(lastError)]
   )
+  await refund(deps, row.id)
   return toDTO(failed.rows[0] ?? row)
 }
 
@@ -329,7 +354,21 @@ async function settle(
      where id = $1 and status = any($4) returning ${COLUMNS}`,
     [row.id, status, error, IN_FLIGHT_STATUSES]
   )
+  await refund(deps, row.id)
   return toDTO(updated.rows[0] ?? row)
+}
+
+/** Refunds a generation that ended without a result. A no-op otherwise, and safe to repeat. */
+async function refund(deps: Pick<GenerationDeps, "db" | "log">, id: string) {
+  try {
+    await refundGeneration(deps.db, id)
+  } catch (error) {
+    // The reconciler retries refunds, so a failure here isn't lost.
+    deps.log?.("[credits] refund failed", {
+      id,
+      reason: String(error).slice(0, 200),
+    })
+  }
 }
 
 /**
@@ -346,13 +385,26 @@ export async function reconcile(
   } = {}
 ): Promise<{ refreshed: number; timedOut: number }> {
   const { staleSeconds = 30, timeoutMinutes = 15, limit = 25, userId } = options
-  const timedOut = await deps.db.query(
+  const timedOut = await deps.db.query<{ id: string }>(
     `update generations set status = 'failed', error = 'Timed out waiting for the generator',
        updated_at = now(), finished_at = now()
      where status = any($1) and created_at < now() - make_interval(mins => $2)
-       and ($3::int is null or user_id = $3)`,
+       and ($3::int is null or user_id = $3)
+     returning id`,
     [IN_FLIGHT_STATUSES, timeoutMinutes, userId ?? null]
   )
+  // Includes refunds an earlier pass couldn't make (the ledger keeps them to one each).
+  const unrefunded = await deps.db.query<{ id: string }>(
+    `select g.id from generations g
+     where g.cost > 0 and g.status in ('failed', 'nsfw', 'canceled')
+       and g.finished_at > now() - interval '1 day'
+       and ($1::int is null or g.user_id = $1)
+       and not exists (select 1 from credit_ledger l where l.generation_id = g.id and l.reason = 'refund')
+     limit $2`,
+    [userId ?? null, limit]
+  )
+  for (const { id } of [...timedOut.rows, ...unrefunded.rows])
+    await refund(deps, id)
   const stale = await deps.db.query<{ id: string }>(
     `select id from generations
      where status in ('queued', 'in_progress') and hf_request_id is not null
@@ -447,7 +499,12 @@ export async function deleteGeneration(
 ): Promise<void> {
   const row = await owned(deps, userId, id)
   if (!isTerminal(row.status) && row.hf_request_id) {
-    await deps.platform.cancel(row.hf_request_id).catch(() => undefined)
+    // Refund only when Higgsfield accepted the cancel; otherwise it still bills us.
+    const canceled = await deps.platform
+      .cancel(row.hf_request_id)
+      .then(() => true)
+      .catch(() => false)
+    if (canceled) await settle(deps, row, "canceled", "Canceled")
   }
   await deps.db.query(
     "delete from generations where id = $1 and user_id = $2",

@@ -9,6 +9,7 @@ import {
 } from "@/lib/generations/storage"
 import { webhookUrl } from "@/lib/generations/webhook-token"
 
+import { getBillingConfig } from "./billing-env"
 import { getPool } from "./db"
 import { getGenerationEnv } from "./generation-env"
 
@@ -54,6 +55,7 @@ export function getGenerationDeps(): GenerationDeps {
             webhookUrl(env.HF_WEBHOOK_BASE_URL!, env.HF_WEBHOOK_SECRET!, id)
         : undefined,
     maxConcurrent: env.MAX_CONCURRENT_GENERATIONS,
+    billing: getBillingConfig(),
     log: (message, details) => console.warn(message, details ?? {}),
   }
   return deps

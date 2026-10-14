@@ -50,6 +50,7 @@ export class UserFacingError extends Error {
     | "not_found"
     | "cannot_cancel"
     | "unavailable"
+    | "insufficient_credits"
 
   constructor(code: UserFacingError["code"], message: string) {
     super(message)
