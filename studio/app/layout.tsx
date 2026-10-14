@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next"
 import { IBM_Plex_Mono, Inter, Space_Grotesk } from "next/font/google"
 
+import { BRAND } from "@/lib/site/brand"
 import { cn } from "@/lib/utils"
 
 import "./globals.css"
@@ -23,10 +24,9 @@ const plexMono = IBM_Plex_Mono({
   display: "swap",
 })
 
-// Replace with the product's own identity when adapting the scaffold.
 export const metadata: Metadata = {
-  title: "Studio",
-  description: "Generate images and video with Higgsfield models.",
+  title: { default: `${BRAND.name} · ${BRAND.tagline}`, template: "%s" },
+  description: BRAND.description,
 }
 
 export const viewport: Viewport = { themeColor: "#131416" }
