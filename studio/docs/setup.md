@@ -70,5 +70,43 @@ Preview):
 | `EMAIL_FROM` | `Brand <login@your-domain.com>` |
 | `HF_API_BASE_URL` | `https://api.higgsfield.ai` |
 
-Coming in later phases: `HF_CREDENTIALS` (platform key, Phase 3), R2 keys
-(Phase 3), and Stripe keys (Phase 5).
+Generation (Phase 3):
+
+| Variable | Value |
+|---|---|
+| `HF_API_KEY` | The complete key from open.higgsfield.ai/api-keys |
+| `HF_WEBHOOK_BASE_URL` | Your production URL, e.g. `https://your-domain.com` |
+| `HF_WEBHOOK_SECRET` | 32+ random characters (`openssl rand -hex 32`) |
+| `CRON_SECRET` | 16+ random characters; Vercel Cron sends it automatically |
+| `STORAGE_DRIVER` | `r2` |
+| `R2_ACCOUNT_ID`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`, `R2_PUBLIC_BASE_URL` | From Cloudflare (below) |
+
+`vercel.json` runs `/api/cron/reconcile` every minute. Per-minute crons need
+a Vercel Pro plan; on Hobby the cron runs once a day. Results still arrive
+through the webhook and the status route, but runs whose webhook is lost wait
+longer to be finished or failed.
+
+Stripe keys come with Phase 5.
+
+## Cloudflare R2 (media storage)
+
+1. **R2 → Create bucket** (e.g. `studio-media`).
+2. **Settings → Public access**: connect a custom domain such as
+   `media.your-domain.com` (recommended; cacheable). The `r2.dev` URL works
+   for testing but is rate-limited. That URL is `R2_PUBLIC_BASE_URL`.
+3. **R2 → Manage API tokens → Create token** with *Object Read & Write*
+   on that bucket only. Copy the Access Key ID and Secret into
+   `R2_ACCESS_KEY_ID` and `R2_SECRET_ACCESS_KEY`; your account id is
+   `R2_ACCOUNT_ID`.
+4. Object keys look like `u/<userId>/<generationId>/0.mp4`. They are
+   unguessable but public: anyone with a link can view that file.
+
+## Higgsfield
+
+1. Create a key at open.higgsfield.ai/api-keys and set `HF_API_KEY`.
+2. Turn on balance alerts there. An empty balance fails every user's
+   generation at once.
+3. With `HF_WEBHOOK_BASE_URL` set, each submit carries
+   `?hf_webhook=<your URL>/api/webhooks/higgsfield?gid=…&t=<HMAC>`. A request
+   without a valid token is rejected, and even a valid one only triggers a
+   status re-fetch.

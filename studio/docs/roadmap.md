@@ -11,7 +11,7 @@ recommend before launch, and the decisions only the owner can make. Updated
 | 0. Research | Partial | `ui-inventory.md` from owner screenshots; `tools/jev` can now fill the rest. `docs.higgsfield.ai` is blocked from the build container, so `model-catalog.md` is still to write. |
 | 1. Scaffold | Done | Higgsfield Studio template in `studio/`. Still BYOK (each user pastes a key); swapping to one platform key waits on Phase 2 auth. |
 | 2. Auth | Done (local) | Magic-link sign-in on Postgres, tested end to end with the local outbox. Needs Supabase and Resend keys to go live (`docs/setup.md`). |
-| 3. Generation core | Partial | Template submit, poll, cancel and upload work with a user key. Not yet: server key, Mongo history, webhook, reconciler, R2 copy. No live generation tested yet (no key in the container). |
+| 3. Generation core | Done (offline) | Platform key, Postgres history per user, webhook, cron reconciler, R2/local copy, cancel, delete. Tested against a fake Higgsfield; not yet against the real API (no key here). |
 | 4. All models | Partial | 38 template entries. Audio and the "check and add" list need the live docs. |
 | 5. Credits and Stripe | Not started | Needs final prices and a Stripe account. |
 | 6. UI clone | In progress | Top nav, menus, Explore, `?model=` routes and the left-panel generator done. Next: Pricing, Account, Effects and Community (after Phases 2 and 5). |
@@ -98,12 +98,12 @@ should follow within weeks, **P2** can wait.
 
 | Item | Priority | Notes |
 |---|---|---|
-| Server-side generation with the platform key | P0 | Phase 3, in progress. Removes the per-user key box. |
-| Generation history in Postgres, owned per user | P0 | Phase 3. Today history lives in each browser. |
-| Higgsfield webhook + reconciler + R2 copy | P0 | Phase 3. Outputs expire on Higgsfield after about 7 days. |
+| Server-side generation with the platform key | Done | Phase 3. Needs `HF_API_KEY` to go live. |
+| Generation history in Postgres, owned per user | Done | Phase 3. |
+| Higgsfield webhook + reconciler + R2 copy | Done | Phase 3. Needs R2 keys and a public URL to go live. |
 | Credits, pricing, Stripe Checkout, Portal, webhooks | P0 | Phase 5. Needs your prices. |
 | Pricing page, Account page (balance, history, plan) | P0 | After Phase 5. |
-| Reference uploads tied to users, size and rate limits | P0 | Phase 3. |
+| Reference uploads tied to users, size and rate limits | Partial | Recorded per user and rate-limited; the library still lists them from the browser. |
 | Projects in Postgres (today: browser only) | P1 | |
 | Audio surface (Seed Audio, TTS, music) | P1 | Needs model schemas from docs.higgsfield.ai. |
 | Effects / presets gallery with our own covers | P1 | Phase 7 content. |

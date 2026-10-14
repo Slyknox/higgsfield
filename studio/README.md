@@ -1,116 +1,76 @@
-# Higgsfield app templates
+# design.ai studio
 
-Production-ready app templates on Next.js 16, Tailwind v4 and shadcn, generating
-through the [Higgsfield platform API](https://api.higgsfield.ai). Shipped as
-a [shadcn registry](https://ui.shadcn.com/docs/registry), so one command
-scaffolds a project and one command adds a model.
+An AI image and video studio on the Higgsfield API: magic-link sign-in,
+every Higgsfield model in one generator, and a personal library. It looks and
+works like higgsfield.ai under our own brand. Credits and Stripe billing come
+next (see `docs/roadmap.md`).
 
-Templates: **studio** (available now), preset and app-detail (next).
+Started from Higgsfield's [Studio template](https://github.com/higgsfield-ai/app-templates)
+(commit `1e15e224`); its UI contracts still apply (`AGENTS.md`,
+`layouts/AGENTS.md`, `components/studio/AGENTS.md`).
 
-## One command, new project
+## How it works
 
-Run from a directory that is not already a project:
-
-```sh
-# studio with every model
-pnpm dlx shadcn@latest init -t next -n my-studio --no-monorepo -y higgsfield-ai/app-templates/studio
-
-# studio with an empty model catalog
-pnpm dlx shadcn@latest init -t next -n my-studio --no-monorepo -y higgsfield-ai/app-templates/studio-bare
-
-# studio with a chosen set of models
-pnpm dlx shadcn@latest init -t next -n my-studio --no-monorepo -y \
-  higgsfield-ai/app-templates/studio-bare \
-  higgsfield-ai/app-templates/seedance-2.5 \
-  higgsfield-ai/app-templates/kling-3
+```
+Browser ── server actions (submit, cancel, delete) ──┐
+   │                                                  ▼
+   └── polls /api/generations/status ──► Next.js server ──► Higgsfield API
+                                             │    ▲             │
+                                  Postgres ◄─┘    └── webhook ──┘
+                               (Supabase)        + cron reconcile
+                                             │
+                                             └──► R2: outputs copied on completion
 ```
 
-Then:
+- **One platform key** (`HF_API_KEY`) on the server. The browser never sees it.
+- **Every generation is a Postgres row owned by its user.** Queries always
+  filter by `user_id`, so another user's ids simply aren't found.
+- **Results arrive three ways**, all idempotent: Higgsfield's webhook, a
+  per-minute cron, and the status route refreshing the caller's own stale rows.
+  That last one keeps local development working without a public URL.
+- **Outputs are copied to our storage** (R2, or local disk in development),
+  because Higgsfield keeps them only about seven days.
 
-```sh
-cd my-studio && pnpm dev
+## Run it
+
+See `docs/setup.md` for accounts and environment variables.
+
+```bash
+pnpm install
+cp .env.example .env.local     # set AUTH_SECRET and HF_API_KEY
+pnpm db:migrate
+pnpm dev
 ```
 
-Open http://localhost:3000, click **Connect API key** in the sidebar and paste the
-API key copied from https://open.higgsfield.ai/api-keys. The key is stored
-in an httpOnly cookie; authenticated platform calls stay on the server.
-Reference uploads use the same key to obtain a signed Higgsfield storage URL.
-The browser uploads directly with the returned headers, without receiving the
-key. No separate storage account or token is required.
-
-## Add or update models
-
-`studio` installs the full catalog by default. When adapting the app, preserve
-every installed model in its image/video picker unless the user explicitly asks
-for a smaller catalog. If only some models have been tested against the live API,
-report that limitation and keep the others available. See the model-preservation
-rule in [AGENTS.md](AGENTS.md).
-
-Every model is one file in `generation/catalog/models/`. The dev server watches
-that directory and regenerates the barrel, so a freshly added model shows up in
-the picker without a restart.
-
-```sh
-pnpm dlx shadcn@latest list   higgsfield-ai/app-templates
-pnpm dlx shadcn@latest search higgsfield-ai/app-templates -q kling
-pnpm dlx shadcn@latest add    higgsfield-ai/app-templates/seedance-2.5
-pnpm dlx shadcn@latest add    higgsfield-ai/app-templates/models          # all of them
-pnpm dlx shadcn@latest add    higgsfield-ai/app-templates/kling-3 --overwrite   # refresh
-```
-
-Pin a version with `#ref`: `higgsfield-ai/app-templates/studio#v1.0.0`.
-
-## Environment
-
-`shadcn init` writes these to `.env.local`:
-
-| Variable                | Purpose                                                        |
-| ----------------------- | -------------------------------------------------------------- |
-| `HF_API_BASE_URL`       | Platform API base, prefilled with `https://api.higgsfield.ai` |
-
-## Working on the templates
-
-```sh
-git clone git@github.com:higgsfield-ai/app-templates.git
-cd app-templates && pnpm install && cp .env.example .env && pnpm dev
-```
-
-| Command               | What it does                                                    |
-| --------------------- | --------------------------------------------------------------- |
-| `pnpm dev`            | Dev server on :3000 (also serves the built registry at `/r/*`) |
-| `pnpm typecheck`      | `tsc --noEmit`                                                  |
-| `pnpm test`           | Credentials, uploads, and model input tests (Node.js 22.15+)    |
-| `pnpm models`         | Regenerate the models barrel and `models/registry.json`         |
-| `pnpm registry:build` | `pnpm models` + `shadcn build` → `public/r/*.json`              |
-| `pnpm build`          | Production build (runs `registry:build` first)                  |
-
-Add a model: create `generation/catalog/models/<name>.ts` with a default export
-(see any neighbour), run `pnpm models`, then
-`pnpm exec shadcn registry validate ./registry.json`. Commit and push; GitHub
-addresses resolve against the default branch.
-
-Test the registry locally from another directory:
-
-```sh
-pnpm dlx shadcn@latest list http://localhost:3000/r/registry.json
-pnpm dlx shadcn@latest add  http://localhost:3000/r/seedance-2.5.json
-```
+| Command | What it does |
+|---|---|
+| `pnpm dev` | Dev server on :3000 |
+| `pnpm typecheck` / `pnpm lint` | Strict TypeScript / ESLint |
+| `pnpm test` | Unit tests; with `TEST_DATABASE_URL`, also Postgres tests |
+| `pnpm test:e2e` | Playwright against a production build, a throwaway database and a fake Higgsfield |
+| `pnpm db:migrate` | Applies `db/migrations/*.sql` |
+| `pnpm models` | Regenerates the model barrel after adding a model file |
 
 ## Layout
 
 ```
-app/                     Next.js App Router, globals.css, /api/upload signed URL route
-layouts/studio.tsx       The Studio screen (read layouts/AGENTS.md)
-components/studio/       Prompt dock, gallery, dialogs, presets (read components/studio/AGENTS.md)
-components/ui/           shadcn primitives (Base UI)
-generation/              Platform client, server actions, polling, stores
-generation/catalog/      Model catalog: models/*.ts, mappers, generated barrel
-lib/studio/              Browser-local history (IndexedDB), projects, uploads, useRuns
-registry.json            shadcn registry root (studio, studio-bare; models are included)
-scripts/sync-models.mjs  Regenerates the barrel + models registry
+app/                 Pages, server actions and API routes
+  api/generations/   List and status (the browser polls these)
+  api/webhooks/      Higgsfield callbacks (HMAC token in the URL)
+  api/cron/          Reconciler for runs whose webhook never came
+auth.ts              Auth.js v5: magic links, database sessions
+db/migrations/       SQL schema (RLS on, no policies)
+generation/          Higgsfield client and the model catalog
+lib/generations/     Generation service, storage drivers, webhook tokens
+lib/server/          Server-only wiring: env, db pool, session, deps
+layouts/generator.tsx  The /image and /video generator
+e2e/                 Playwright tests and the fake Higgsfield
+docs/                roadmap, decisions, setup, UI inventory
 ```
 
-No `src/` directory, on purpose: the shadcn Next template uses a root layout,
-and template files have to land on top of it.
+## Add a model
 
-`AGENTS.md` is the contract for agents adapting a scaffolded app.
+Drop a file in `generation/catalog/models/` (see any neighbour) with the
+source URL of its API docs, add its description to `lib/site/model-meta.ts`,
+run `pnpm models`, and add a request-shape test like
+`tests/seedance-2.5.test.mjs`.

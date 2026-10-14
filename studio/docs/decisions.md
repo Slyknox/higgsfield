@@ -127,3 +127,45 @@ Settings sent: `resolution` (480p/720p), `generate_audio`, `duration` (4–30 s)
   session themselves (Phase 3).
 - **Still bring-your-own-key** for generation until Phase 3 moves to the
   platform key.
+
+## Server-side generation (Phase 3)
+
+- **One platform key, `HF_API_KEY`**: the complete key copied from
+  open.higgsfield.ai, as Higgsfield's current guidance describes. The build
+  prompt's `HF_CREDENTIALS=key_id:key_secret` predates that format. The
+  per-user key dialog, key cookie and device cookie (`proxy.ts`) are gone.
+- **Generation settings are validated separately from sign-in**
+  (`lib/server/generation-env.ts`), so a missing R2 or Higgsfield setting
+  disables generation with a clear log line but never breaks sign-in.
+- **The service takes its dependencies** (`lib/generations/service.ts`:
+  database, platform, storage), so the same code runs in production and in
+  tests against Postgres and a fake Higgsfield over HTTP.
+- **Per-user concurrency** (default 4) is enforced under a Postgres advisory
+  lock, so two tabs can't both slip under the limit. A mutation test proved
+  the test fails without the lock.
+- **Submit retries only on 429.** Any other failure might already have
+  created the request, and Higgsfield has no idempotency key, so a retry
+  could bill twice. Those runs are marked failed at once (they'll be refunded
+  in Phase 5) rather than left for a reconciler that couldn't find them
+  anyway.
+- **Results arrive three ways, all idempotent**: the webhook (HMAC token in
+  the URL, payload never trusted, status re-fetched, R2 copy run after the
+  reply with `after()`), a per-minute Vercel Cron (`vercel.json`), and the
+  status route refreshing the caller's own stale rows. That last one departs
+  from the build prompt's "status route only reads the DB": without it, local
+  development (no public URL) and Vercel Hobby (daily cron) would leave runs
+  hanging. It only touches the caller's rows, at most 8 per poll.
+- **Final writes are conditional** (`where status in in-flight`), so the
+  webhook, cron and status route can race safely; storage keys are
+  deterministic (`u/<user>/<generation>/<n>.<ext>`), so a duplicate copy just
+  overwrites.
+- **Storage**: R2 through its S3 API (`aws4fetch`), or local disk served by
+  `/api/media` (localhost only, refused otherwise). Copies are buffered in
+  memory, capped at 512 MB.
+- **Logs** carry method, path and status only: no prompts, no webhook tokens,
+  no signed or media URLs.
+- **The template's shadcn registry build is removed** (`prebuild`,
+  `registry.json`): publishing a registry is the template repo's job, and it
+  listed files this app deleted.
+- **Not yet:** reference uploads are recorded per user but the asset library
+  still lists them from the browser; projects are still browser-local.

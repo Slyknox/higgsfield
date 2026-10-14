@@ -29,7 +29,7 @@ the component here, backward compatible.
 - **`ExamplePresets` / `TemplateCard`** for pick-one preset grids. Each
   `TemplateItem` carries the prompt (and optional model/settings) it applies.
 - **`MyProjects`, `ProjectCreateModal`, `ProjectActions`** own project UI.
-- **`KeyDialog`** is the only place that collects the platform key.
+- There is no key dialog: the platform key lives in the server environment.
 
 Design invariants: dark only; lime `bg-primary` is reserved for the generation
 CTA and active states; ordinary actions use `ghost`/`outline` buttons; icons
