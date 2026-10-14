@@ -10,7 +10,6 @@ import {
   type TemplateItem,
 } from "@/components/studio/template-picker"
 import { HeroComposition } from "@/components/studio/hero-composition"
-import { KeyDialog } from "@/components/studio/key-dialog"
 import {
   MyProjects,
   type MyProjectsProject,
@@ -256,7 +255,7 @@ export function StudioTemplate({
   const projectsStore = useProjects()
   const projectId = view.kind === "project" ? view.projectId : undefined
 
-  const { dock, runs, galleryItems, key, applyTemplate } = useStudioDock({
+  const { dock, runs, galleryItems, applyTemplate } = useStudioDock({
     initialModel,
     routeSurface,
     onUserModelChange,
@@ -266,10 +265,6 @@ export function StudioTemplate({
       if (projectId) projectsStore.touch(projectId)
     },
   })
-  const keyOpen = key.open
-  const setKeyOpen = key.setOpen
-  const keyConfigured = key.configured
-  const setKeyConfigured = key.setConfigured
   const handleUseTemplate = applyTemplate
 
   const byProject = useMemo(() => {
@@ -326,8 +321,6 @@ export function StudioTemplate({
         }}
         collapsed={collapsed}
         onCollapsedChange={setCollapsed}
-        keyConfigured={keyConfigured}
-        onOpenKey={() => setKeyOpen(true)}
       />
       <main className="relative flex min-w-0 flex-1 flex-col">
         {view.kind === "home" ? (
@@ -356,12 +349,6 @@ export function StudioTemplate({
           />
         )}
       </main>
-      <KeyDialog
-        open={keyOpen}
-        onOpenChange={setKeyOpen}
-        configured={keyConfigured}
-        onChange={setKeyConfigured}
-      />
     </div>
   )
 }

@@ -5,7 +5,6 @@ import type { ComponentProps } from "react"
 
 import type { StudioPromptBox } from "@/components/studio/studio-prompt-box"
 import type { TemplateItem } from "@/components/studio/template-picker"
-import { hasPlatformCredentials } from "@/generation/actions"
 import { MODELS, getModel, parseSettings } from "@/generation/catalog"
 import type {
   GenerationPlane,
@@ -25,8 +24,15 @@ import {
 import { useActive } from "@/generation/stores/active"
 import { useSettings } from "@/generation/stores/settings"
 import { toPlatform } from "@/generation/to-platform"
-import { runToGalleryItems, runToLibraryItems } from "@/lib/studio/gallery-items"
-import { uploadAsset, useUploads, type AssetSelection } from "@/lib/studio/uploads"
+import {
+  runToGalleryItems,
+  runToLibraryItems,
+} from "@/lib/studio/gallery-items"
+import {
+  uploadAsset,
+  useUploads,
+  type AssetSelection,
+} from "@/lib/studio/uploads"
 import { useRuns } from "@/lib/studio/use-runs"
 
 export type DockProps = Omit<
@@ -53,7 +59,7 @@ export interface UseStudioDockOptions {
 
 /**
  * The prompt dock's state and actions: active model and settings, prompt,
- * attachments, validation, generate and cancel, and the key dialog. Shared by
+ * attachments, validation, generate and cancel. Shared by
  * every layout that generates, so they never fork the dock logic.
  */
 export function useStudioDock({
@@ -65,8 +71,6 @@ export function useStudioDock({
 }: UseStudioDockOptions = {}) {
   const [prompt, setPrompt] = useState("")
   const [media, setMedia] = useState<MediaItem[]>([])
-  const [keyOpen, setKeyOpen] = useState(false)
-  const [keyConfigured, setKeyConfigured] = useState(false)
   const [canceling, setCanceling] = useState(false)
   const [localError, setLocalError] = useState<string | null>(null)
 
@@ -120,10 +124,6 @@ export function useStudioDock({
     }
   }, [inputMode, media, model, prompt, settings])
 
-  useEffect(() => {
-    void hasPlatformCredentials().then(setKeyConfigured)
-  }, [])
-
   // The URL picks the model: an explicit model wins, else the route's surface.
   useEffect(() => {
     if (initialModel && MODELS.some((m) => m.id === initialModel)) {
@@ -166,22 +166,10 @@ export function useStudioDock({
   const generate = useCallback(() => {
     if (!canGenerate || generating || !prepared.plane) return
     setLocalError(null)
-    if (!keyConfigured) {
-      setKeyOpen(true)
-      return
-    }
     void runs.submit(prepared.plane, projectId).then((record) => {
       if (record) onSubmitted?.(record)
     })
-  }, [
-    canGenerate,
-    generating,
-    keyConfigured,
-    onSubmitted,
-    prepared.plane,
-    projectId,
-    runs,
-  ])
+  }, [canGenerate, generating, onSubmitted, prepared.plane, projectId, runs])
 
   const cancel = useCallback(() => {
     if (!generating || canceling) return
@@ -279,12 +267,6 @@ export function useStudioDock({
     runs,
     galleryItems,
     libraryItems,
-    key: {
-      open: keyOpen,
-      setOpen: setKeyOpen,
-      configured: keyConfigured,
-      setConfigured: setKeyConfigured,
-    },
     applyTemplate,
   }
 }

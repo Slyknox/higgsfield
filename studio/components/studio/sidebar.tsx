@@ -40,8 +40,9 @@ export interface StudioSidebarProps {
   onDeleteProject: (projectId: string) => void | Promise<void>
   collapsed: boolean
   onCollapsedChange: (collapsed: boolean) => void
-  keyConfigured: boolean
-  onOpenKey: () => void
+  /** Bring-your-own-key row; omitted when the server holds the platform key. */
+  keyConfigured?: boolean
+  onOpenKey?: () => void
 }
 
 function Row({
@@ -132,7 +133,7 @@ export function StudioSidebar({
   return (
     <aside
       className={cn(
-        "m-2.5 flex h-[calc(100dvh-20px)] shrink-0 flex-col rounded-xl border border-sidebar-border bg-sidebar p-2 text-sidebar-foreground transition-[width] duration-200",
+        "m-2.5 flex h-[calc(100%-20px)] shrink-0 flex-col rounded-xl border border-sidebar-border bg-sidebar p-2 text-sidebar-foreground transition-[width] duration-200",
         collapsed ? "w-14" : "w-64"
       )}
     >
@@ -252,26 +253,28 @@ export function StudioSidebar({
         </div>
       </nav>
 
-      <div className="pt-2">
-        <Row
-          collapsed={collapsed}
-          onClick={onOpenKey}
-          ariaLabel={keyConfigured ? "Manage API key" : "Connect API key"}
-          start={
-            <span className="relative flex size-6 items-center justify-center rounded-md border border-white/10 bg-white/5 text-muted-foreground">
-              <KeyRound className="size-3.5" />
-              <span
-                className={cn(
-                  "absolute -top-0.5 -right-0.5 size-2 rounded-full ring-2 ring-sidebar",
-                  keyConfigured ? "bg-primary" : "bg-destructive"
-                )}
-                aria-hidden
-              />
-            </span>
-          }
-          title={keyConfigured ? "API key saved" : "Connect API key"}
-        />
-      </div>
+      {onOpenKey ? (
+        <div className="pt-2">
+          <Row
+            collapsed={collapsed}
+            onClick={onOpenKey}
+            ariaLabel={keyConfigured ? "Manage API key" : "Connect API key"}
+            start={
+              <span className="relative flex size-6 items-center justify-center rounded-md border border-white/10 bg-white/5 text-muted-foreground">
+                <KeyRound className="size-3.5" />
+                <span
+                  className={cn(
+                    "absolute -top-0.5 -right-0.5 size-2 rounded-full ring-2 ring-sidebar",
+                    keyConfigured ? "bg-primary" : "bg-destructive"
+                  )}
+                  aria-hidden
+                />
+              </span>
+            }
+            title={keyConfigured ? "API key saved" : "Connect API key"}
+          />
+        </div>
+      ) : null}
     </aside>
   )
 }
