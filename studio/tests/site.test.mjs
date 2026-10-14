@@ -41,3 +41,24 @@ test("every installed model has its own picker description", () => {
   const generic = MODELS.filter((m) => /^(Image|Video) generation$/.test(modelMeta(m).description));
   assert.deepEqual(generic.map((m) => m.id), []);
 });
+
+const { modeOf, modesFor, familyOf } = await import("../lib/site/model-modes.ts");
+
+test("generator modes: edit needs a source clip, motion models transfer motion", () => {
+  const byId = (id) => MODELS.find((m) => m.id === id);
+  assert.equal(modeOf(byId("seedance-2.5")), "create");
+  assert.equal(modeOf(byId("seedance-2.5-edit")), "edit");
+  assert.equal(modeOf(byId("seedance-2.5-extend")), "edit");
+  assert.equal(modeOf(byId("kling-3-motion-std")), "motion");
+  assert.equal(modeOf(byId("kling-3-pro")), "create");
+});
+
+test("video shows all three mode tabs; image shows none", () => {
+  assert.deepEqual(modesFor(MODELS.filter((m) => m.surface === "video")), ["create", "edit", "motion"]);
+  assert.deepEqual(modesFor(MODELS.filter((m) => m.surface === "image")), ["create"]);
+});
+
+test("every model belongs to a named family for the picker", () => {
+  assert.equal(familyOf(MODELS.find((m) => m.id === "kling-o3")), "Kling");
+  for (const m of MODELS) assert.ok(familyOf(m).length > 0, m.id);
+});
