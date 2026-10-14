@@ -22,7 +22,12 @@ export function parseEmail(raw: unknown): string | null {
 export function safeCallbackUrl(raw: unknown, fallback = "/"): string {
   if (typeof raw !== "string") return fallback
   const value = raw.trim()
-  if (!value.startsWith("/") || value.startsWith("//") || value.startsWith("/\\")) return fallback
+  if (
+    !value.startsWith("/") ||
+    value.startsWith("//") ||
+    value.startsWith("/\\")
+  )
+    return fallback
   if (/[\u0000-\u001f]/.test(value)) return fallback
   try {
     const parsed = new URL(value, "http://local.invalid")

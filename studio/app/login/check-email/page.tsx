@@ -16,12 +16,15 @@ export default function CheckEmailPage() {
       <AuthCard title="Check your email">
         <MailCheck aria-hidden className="size-8 text-primary" />
         <p className="text-q-body-sm-regular text-q-text-secondary">
-          We sent you a sign-in link. Open it on this device to continue. It works once and expires in{" "}
-          {MAGIC_LINK_MINUTES} minutes.
+          We sent you a sign-in link. Open it on this device to continue. It
+          works once and expires in {MAGIC_LINK_MINUTES} minutes.
         </p>
         <p className="text-q-caption-sm-regular text-q-text-secondary">
           No email? Check spam, or{" "}
-          <Link href="/login" className="text-foreground underline underline-offset-4">
+          <Link
+            href="/login"
+            className="text-foreground underline underline-offset-4"
+          >
             try again
           </Link>
           .

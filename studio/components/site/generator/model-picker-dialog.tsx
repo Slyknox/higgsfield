@@ -42,7 +42,13 @@ export function ModelPickerDialog({
     for (const model of models) {
       const meta = modelMeta(model)
       const family = familyOf(model)
-      if (q && ![model.label, family, meta.description].some((t) => t.toLowerCase().includes(q))) continue
+      if (
+        q &&
+        ![model.label, family, meta.description].some((t) =>
+          t.toLowerCase().includes(q)
+        )
+      )
+        continue
       map.set(family, [...(map.get(family) ?? []), model])
     }
     return [...map.entries()]
@@ -84,8 +90,14 @@ export function ModelPickerDialog({
                 </p>
               ) : null}
               {groups.map(([family, entries]) => (
-                <section key={family} aria-label={family} className="flex flex-col gap-2">
-                  <h3 className="text-q-caption-sm-medium text-q-text-secondary">{family}</h3>
+                <section
+                  key={family}
+                  aria-label={family}
+                  className="flex flex-col gap-2"
+                >
+                  <h3 className="text-q-caption-sm-medium text-q-text-secondary">
+                    {family}
+                  </h3>
                   <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                     {entries.map((model) => {
                       const meta = modelMeta(model)
@@ -101,7 +113,7 @@ export function ModelPickerDialog({
                               setQuery("")
                             }}
                             className={cn(
-                              "flex w-full items-center gap-3 rounded-xl border p-2.5 text-left outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+                              "flex w-full items-center gap-3 rounded-xl border p-2.5 text-left transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
                               active
                                 ? "border-primary/60 bg-primary/10"
                                 : "border-white/5 bg-white/[0.03] hover:border-white/15 hover:bg-white/[0.06]"
@@ -111,7 +123,9 @@ export function ModelPickerDialog({
                             <span className="flex min-w-0 flex-col">
                               <span className="flex items-center gap-2 text-q-body-sm-medium">
                                 <span className="truncate">{model.label}</span>
-                                {meta.badge ? <Badge>{meta.badge}</Badge> : null}
+                                {meta.badge ? (
+                                  <Badge>{meta.badge}</Badge>
+                                ) : null}
                               </span>
                               <span className="line-clamp-2 text-q-caption-sm-regular text-q-text-secondary">
                                 {meta.description}

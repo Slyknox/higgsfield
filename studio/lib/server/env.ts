@@ -6,8 +6,12 @@ import { outboxAllowed } from "@/lib/auth/policy"
 
 const schema = z
   .object({
-    DATABASE_URL: z.url({ message: "DATABASE_URL must be a Postgres connection URL" }),
-    AUTH_SECRET: z.string().min(32, "AUTH_SECRET must be at least 32 characters (npx auth secret)"),
+    DATABASE_URL: z.url({
+      message: "DATABASE_URL must be a Postgres connection URL",
+    }),
+    AUTH_SECRET: z
+      .string()
+      .min(32, "AUTH_SECRET must be at least 32 characters (npx auth secret)"),
     AUTH_URL: z.url().optional(),
     EMAIL_TRANSPORT: z.enum(["resend", "outbox"]).default("resend"),
     AUTH_RESEND_KEY: z.string().optional(),
@@ -15,12 +19,17 @@ const schema = z
   })
   .superRefine((env, ctx) => {
     if (env.EMAIL_TRANSPORT === "resend" && !env.AUTH_RESEND_KEY)
-      ctx.addIssue({ code: "custom", path: ["AUTH_RESEND_KEY"], message: "required when EMAIL_TRANSPORT=resend" })
+      ctx.addIssue({
+        code: "custom",
+        path: ["AUTH_RESEND_KEY"],
+        message: "required when EMAIL_TRANSPORT=resend",
+      })
     if (env.EMAIL_TRANSPORT === "outbox" && !outboxAllowed(env.AUTH_URL))
       ctx.addIssue({
         code: "custom",
         path: ["EMAIL_TRANSPORT"],
-        message: "outbox is local-only: set AUTH_URL to a localhost URL, or use resend",
+        message:
+          "outbox is local-only: set AUTH_URL to a localhost URL, or use resend",
       })
   })
 
@@ -33,7 +42,9 @@ export function getEnv(): ServerEnv {
   if (cached) return cached
   const result = schema.safeParse(process.env)
   if (!result.success) {
-    const problems = result.error.issues.map((i) => `  ${i.path.join(".")}: ${i.message}`).join("\n")
+    const problems = result.error.issues
+      .map((i) => `  ${i.path.join(".")}: ${i.message}`)
+      .join("\n")
     throw new Error(`Invalid server environment:\n${problems}`)
   }
   cached = result.data

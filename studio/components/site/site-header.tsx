@@ -5,7 +5,11 @@ import { TopNav, type NavUser } from "@/components/site/top-nav"
 export async function SiteHeader() {
   const session = await getSession()
   const user: NavUser | null = session?.user?.email
-    ? { email: session.user.email, name: session.user.name ?? null, role: session.user.role }
+    ? {
+        email: session.user.email,
+        name: session.user.name ?? null,
+        role: session.user.role,
+      }
     : null
   return <TopNav user={user} />
 }

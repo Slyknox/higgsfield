@@ -39,7 +39,11 @@ import { cn } from "@/lib/utils"
 export const TOP_NAV_HEIGHT = 56
 
 /** The signed-in user as the nav needs it; null when signed out. */
-export type NavUser = { email: string; name: string | null; role: "user" | "admin" }
+export type NavUser = {
+  email: string
+  name: string | null
+  role: "user" | "admin"
+}
 
 type Feature = {
   label: string
@@ -53,21 +57,59 @@ const has = (id: string) => MODELS.some((m) => m.id === id)
 // Features only list modes whose model is installed, so no link dead-ends.
 const FEATURES: Record<Surface, Feature[]> = {
   video: [
-    { label: "Create Video", description: "Generate video from text, frames or references", href: "/video", icon: Clapperboard },
+    {
+      label: "Create Video",
+      description: "Generate video from text, frames or references",
+      href: "/video",
+      icon: Clapperboard,
+    },
     ...(has("seedance-2.5-edit")
-      ? [{ label: "Edit Video", description: "Change scenes, shots and elements with a prompt", href: "/video?model=seedance-2.5-edit", icon: Scissors }]
+      ? [
+          {
+            label: "Edit Video",
+            description: "Change scenes, shots and elements with a prompt",
+            href: "/video?model=seedance-2.5-edit",
+            icon: Scissors,
+          },
+        ]
       : []),
     ...(has("seedance-2.5-extend")
-      ? [{ label: "Extend Video", description: "Continue a clip with matching motion", href: "/video?model=seedance-2.5-extend", icon: MoveRight }]
+      ? [
+          {
+            label: "Extend Video",
+            description: "Continue a clip with matching motion",
+            href: "/video?model=seedance-2.5-extend",
+            icon: MoveRight,
+          },
+        ]
       : []),
     ...(has("kling-3-motion-std")
-      ? [{ label: "Motion Control", description: "Transfer motion from a video to an image", href: "/video?model=kling-3-motion-std", icon: Repeat }]
+      ? [
+          {
+            label: "Motion Control",
+            description: "Transfer motion from a video to an image",
+            href: "/video?model=kling-3-motion-std",
+            icon: Repeat,
+          },
+        ]
       : []),
   ],
   image: [
-    { label: "Create Image", description: "Generate images from text or references", href: "/image", icon: ImageIcon },
+    {
+      label: "Create Image",
+      description: "Generate images from text or references",
+      href: "/image",
+      icon: ImageIcon,
+    },
     ...(has("soul-cinema")
-      ? [{ label: "Cinematic Stills", description: "Film-grade frames with cinematic grading", href: "/image?model=soul-cinema", icon: Film }]
+      ? [
+          {
+            label: "Cinematic Stills",
+            description: "Film-grade frames with cinematic grading",
+            href: "/image?model=soul-cinema",
+            icon: Film,
+          },
+        ]
       : []),
   ],
 }
@@ -130,7 +172,11 @@ function MegaMenu({ surface }: { surface: Surface }) {
             return (
               <NavigationMenu.Link
                 key={m.id}
-                render={<Link href={`/${surface}?model=${encodeURIComponent(m.id)}`} />}
+                render={
+                  <Link
+                    href={`/${surface}?model=${encodeURIComponent(m.id)}`}
+                  />
+                }
                 className="flex items-center gap-3 rounded-xl p-2 outline-none hover:bg-white/5 focus-visible:bg-white/5"
               >
                 <ModelGlyph model={m} />
@@ -154,7 +200,7 @@ function MegaMenu({ surface }: { surface: Surface }) {
 
 const linkClass = (active: boolean) =>
   cn(
-    "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-q-body-sm-medium outline-none transition-colors focus-visible:ring-3 focus-visible:ring-ring/50",
+    "inline-flex h-8 items-center gap-1 rounded-lg px-2.5 text-q-body-sm-medium transition-colors outline-none focus-visible:ring-3 focus-visible:ring-ring/50",
     active ? "text-primary" : "text-q-text-secondary hover:text-foreground"
   )
 
@@ -176,14 +222,19 @@ function AccountMenu({ user }: { user: NavUser }) {
       <DropdownMenuContent align="end" className="min-w-56">
         {/* Base UI requires a group label to sit inside a group. */}
         <DropdownMenuGroup>
-          <DropdownMenuLabel className="truncate">{user.email}</DropdownMenuLabel>
+          <DropdownMenuLabel className="truncate">
+            {user.email}
+          </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <DropdownMenuItem render={<Link href="/assets" />}>
           <FolderOpen aria-hidden />
           Assets
         </DropdownMenuItem>
-        <DropdownMenuItem disabled={pending} onClick={() => startTransition(() => signOutAction())}>
+        <DropdownMenuItem
+          disabled={pending}
+          onClick={() => startTransition(() => signOutAction())}
+        >
           <LogOut aria-hidden />
           {pending ? "Signing out…" : "Sign out"}
         </DropdownMenuItem>
@@ -194,7 +245,9 @@ function AccountMenu({ user }: { user: NavUser }) {
 
 export function TopNav({ user }: { user: NavUser | null }) {
   const pathname = usePathname()
-  const surfaces = SURFACES.filter((s) => MODELS.some((m) => m.surface === s.surface))
+  const surfaces = SURFACES.filter((s) =>
+    MODELS.some((m) => m.surface === s.surface)
+  )
   const isActive = (href: string) =>
     href === "/" ? pathname === "/" : pathname.startsWith(href)
 
@@ -208,7 +261,10 @@ export function TopNav({ user }: { user: NavUser | null }) {
       <NavigationMenu.Root className="hidden md:block">
         <NavigationMenu.List className="flex items-center gap-1">
           <NavigationMenu.Item>
-            <NavigationMenu.Link render={<Link href="/" />} className={linkClass(isActive("/"))}>
+            <NavigationMenu.Link
+              render={<Link href="/" />}
+              className={linkClass(isActive("/"))}
+            >
               Explore
             </NavigationMenu.Link>
           </NavigationMenu.Item>
@@ -259,7 +315,10 @@ export function TopNav({ user }: { user: NavUser | null }) {
           <>
             <Link
               href={`/login?callbackUrl=${encodeURIComponent(pathname)}`}
-              className={cn(buttonVariants({ variant: "ghost", size: "default" }), "hidden sm:inline-flex")}
+              className={cn(
+                buttonVariants({ variant: "ghost", size: "default" }),
+                "hidden sm:inline-flex"
+              )}
             >
               Log in
             </Link>
@@ -275,12 +334,17 @@ export function TopNav({ user }: { user: NavUser | null }) {
         <DropdownMenu>
           <DropdownMenuTrigger
             aria-label="Open menu"
-            className={cn(buttonVariants({ variant: "ghost", size: "icon" }), "md:hidden")}
+            className={cn(
+              buttonVariants({ variant: "ghost", size: "icon" }),
+              "md:hidden"
+            )}
           >
             <Menu aria-hidden />
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="min-w-48">
-            <DropdownMenuItem render={<Link href="/" />}>Explore</DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/" />}>
+              Explore
+            </DropdownMenuItem>
             {surfaces.map((s) => (
               <DropdownMenuItem key={s.surface} render={<Link href={s.href} />}>
                 {s.label}
@@ -291,7 +355,9 @@ export function TopNav({ user }: { user: NavUser | null }) {
                 {f.label}
               </DropdownMenuItem>
             ))}
-            <DropdownMenuItem render={<Link href="/assets" />}>Assets</DropdownMenuItem>
+            <DropdownMenuItem render={<Link href="/assets" />}>
+              Assets
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>

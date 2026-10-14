@@ -23,15 +23,35 @@ import { cn } from "@/lib/utils"
 const installed = (id: string): ModelEntry | undefined =>
   MODELS.find((m) => m.id === id)
 
-const href = (m: ModelEntry) => `/${m.surface}?model=${encodeURIComponent(m.id)}`
-
+const href = (m: ModelEntry) =>
+  `/${m.surface}?model=${encodeURIComponent(m.id)}`
 
 const SPOTLIGHT: { id: string; title: string; subtitle: string }[] = [
-  { id: "seedance-2.5", title: "Seedance 2.5", subtitle: "Up to 30-second videos from text, frames, video or audio" },
-  { id: "kling-3-std", title: "Kling 3.0", subtitle: "Cinematic multi-shot video with native audio" },
-  { id: "soul-2", title: "Soul 2", subtitle: "Photoreal people, fashion and culture-native imagery" },
-  { id: "wan-3", title: "Wan 3.0", subtitle: "Videos from text, keyframes or multimodal references" },
-  { id: "minimax-h3", title: "MiniMax H3", subtitle: "2K video from text, keyframes or references" },
+  {
+    id: "seedance-2.5",
+    title: "Seedance 2.5",
+    subtitle: "Up to 30-second videos from text, frames, video or audio",
+  },
+  {
+    id: "kling-3-std",
+    title: "Kling 3.0",
+    subtitle: "Cinematic multi-shot video with native audio",
+  },
+  {
+    id: "soul-2",
+    title: "Soul 2",
+    subtitle: "Photoreal people, fashion and culture-native imagery",
+  },
+  {
+    id: "wan-3",
+    title: "Wan 3.0",
+    subtitle: "Videos from text, keyframes or multimodal references",
+  },
+  {
+    id: "minimax-h3",
+    title: "MiniMax H3",
+    subtitle: "2K video from text, keyframes or references",
+  },
 ]
 
 type Feature = {
@@ -49,13 +69,49 @@ function features(): Feature[] {
     const m = installed(id)
     if (m) list.push({ ...f, href: href(m) })
   }
-  add("seedance-2.5", { title: "Seedance 2.5", description: "The most advanced video model", icon: Clapperboard, tag: "Video", badge: "TOP" })
-  add("seedance-2.5-edit", { title: "Edit Video", description: "Change scenes and elements with a prompt", icon: Scissors, tag: "Video" })
-  add("seedance-2.5-extend", { title: "Extend Video", description: "Continue any clip with matching motion", icon: MoveRight, tag: "Video" })
-  add("kling-3-motion-std", { title: "Motion Control", description: "Transfer motion from a video onto an image", icon: Repeat, tag: "Video" })
-  add("soul-2", { title: "Soul 2", description: "Photoreal images for fashion and people", icon: ImageIcon, tag: "Image" })
-  add("soul-cinema", { title: "Cinematic Stills", description: "Film-grade frames with cinematic grading", icon: Film, tag: "Image" })
-  list.push({ title: "Assets", description: "Every generation you have made, in one library", href: "/assets", icon: FolderOpen })
+  add("seedance-2.5", {
+    title: "Seedance 2.5",
+    description: "The most advanced video model",
+    icon: Clapperboard,
+    tag: "Video",
+    badge: "TOP",
+  })
+  add("seedance-2.5-edit", {
+    title: "Edit Video",
+    description: "Change scenes and elements with a prompt",
+    icon: Scissors,
+    tag: "Video",
+  })
+  add("seedance-2.5-extend", {
+    title: "Extend Video",
+    description: "Continue any clip with matching motion",
+    icon: MoveRight,
+    tag: "Video",
+  })
+  add("kling-3-motion-std", {
+    title: "Motion Control",
+    description: "Transfer motion from a video onto an image",
+    icon: Repeat,
+    tag: "Video",
+  })
+  add("soul-2", {
+    title: "Soul 2",
+    description: "Photoreal images for fashion and people",
+    icon: ImageIcon,
+    tag: "Image",
+  })
+  add("soul-cinema", {
+    title: "Cinematic Stills",
+    description: "Film-grade frames with cinematic grading",
+    icon: Film,
+    tag: "Image",
+  })
+  list.push({
+    title: "Assets",
+    description: "Every generation you have made, in one library",
+    href: "/assets",
+    icon: FolderOpen,
+  })
   return list.slice(0, 6)
 }
 
@@ -83,7 +139,8 @@ function SpotlightCard({
           aria-hidden
           className="pointer-events-none absolute inset-0 opacity-40"
           style={{
-            backgroundImage: "radial-gradient(rgba(255,255,255,0.25) 1px, transparent 1px)",
+            backgroundImage:
+              "radial-gradient(rgba(255,255,255,0.25) 1px, transparent 1px)",
             backgroundSize: "14px 14px",
           }}
         />
@@ -101,34 +158,37 @@ function SpotlightCard({
         >
           {title}
         </span>
-        <span className="text-q-body-sm-regular text-q-text-secondary">{subtitle}</span>
+        <span className="text-q-body-sm-regular text-q-text-secondary">
+          {subtitle}
+        </span>
       </span>
     </Link>
   )
 }
 
-const FOOTER: { heading: string; links: { label: string; href: string }[] }[] = [
-  {
-    heading: "Create",
-    links: [
-      { label: "AI Video", href: "/video" },
-      { label: "AI Image", href: "/image" },
-      { label: "Assets", href: "/assets" },
-    ],
-  },
-  {
-    heading: "Video models",
-    links: MODELS.filter((m) => m.surface === "video")
-      .slice(0, 6)
-      .map((m) => ({ label: m.label, href: href(m) })),
-  },
-  {
-    heading: "Image models",
-    links: MODELS.filter((m) => m.surface === "image")
-      .slice(0, 6)
-      .map((m) => ({ label: m.label, href: href(m) })),
-  },
-]
+const FOOTER: { heading: string; links: { label: string; href: string }[] }[] =
+  [
+    {
+      heading: "Create",
+      links: [
+        { label: "AI Video", href: "/video" },
+        { label: "AI Image", href: "/image" },
+        { label: "Assets", href: "/assets" },
+      ],
+    },
+    {
+      heading: "Video models",
+      links: MODELS.filter((m) => m.surface === "video")
+        .slice(0, 6)
+        .map((m) => ({ label: m.label, href: href(m) })),
+    },
+    {
+      heading: "Image models",
+      links: MODELS.filter((m) => m.surface === "image")
+        .slice(0, 6)
+        .map((m) => ({ label: m.label, href: href(m) })),
+    },
+  ]
 
 /** The Explore home page: spotlight carousel, feature grid, model directory. */
 export function ExplorePage() {
@@ -158,7 +218,7 @@ export function ExplorePage() {
         </h1>
 
         <section aria-label="Featured models">
-          <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6 [scrollbar-width:none]">
+          <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 [scrollbar-width:none] gap-4 overflow-x-auto px-4 pb-2 md:-mx-6 md:scroll-px-6 md:px-6">
             {spotlight.map((s, i) => (
               <SpotlightCard key={s.id} {...s} accent={i === 0} />
             ))}
@@ -200,7 +260,7 @@ export function ExplorePage() {
               <li key={f.href}>
                 <Link
                   href={f.href}
-                  className="flex h-full min-h-[140px] flex-col justify-between gap-6 rounded-2xl border border-white/5 bg-white/[0.03] p-5 outline-none transition-colors hover:border-white/15 hover:bg-white/[0.06] focus-visible:ring-3 focus-visible:ring-ring/50"
+                  className="flex h-full min-h-[140px] flex-col justify-between gap-6 rounded-2xl border border-white/5 bg-white/[0.03] p-5 transition-colors outline-none hover:border-white/15 hover:bg-white/[0.06] focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
                   <span className="flex items-start justify-between">
                     <f.icon aria-hidden className="size-5" />
@@ -237,7 +297,11 @@ export function ExplorePage() {
             </span>
           </div>
           {FOOTER.map((col) => (
-            <nav key={col.heading} aria-label={col.heading} className="flex flex-col gap-2">
+            <nav
+              key={col.heading}
+              aria-label={col.heading}
+              className="flex flex-col gap-2"
+            >
               <span className="text-q-caption-sm-medium text-q-text-secondary">
                 {col.heading}
               </span>
@@ -254,7 +318,8 @@ export function ExplorePage() {
           ))}
         </div>
         <p className="mx-auto w-full max-w-[1600px] px-4 pb-8 text-q-caption-sm-regular text-q-text-secondary md:px-6">
-          © {new Date().getFullYear()} {BRAND.name}. Generations run on the Higgsfield API.
+          © {new Date().getFullYear()} {BRAND.name}. Generations run on the
+          Higgsfield API.
         </p>
       </footer>
     </main>

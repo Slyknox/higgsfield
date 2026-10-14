@@ -26,8 +26,14 @@ export const { handlers, auth, signIn, signOut } = NextAuth(() => {
         async sendVerificationRequest({ identifier, url }) {
           // Also covers direct POSTs to /api/auth/signin/resend that skip the login form.
           const { perEmail } = MAGIC_LINK_LIMITS
-          const hit = await hitRateLimit(pool, `magic-link:email:${identifier}`, perEmail.limit, perEmail.windowSeconds)
-          if (!hit.allowed) throw new Error("Too many sign-in emails for this address")
+          const hit = await hitRateLimit(
+            pool,
+            `magic-link:email:${identifier}`,
+            perEmail.limit,
+            perEmail.windowSeconds
+          )
+          if (!hit.allowed)
+            throw new Error("Too many sign-in emails for this address")
           await sendMagicLink({ to: identifier, url })
         },
       }),

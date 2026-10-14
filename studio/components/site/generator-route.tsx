@@ -75,7 +75,11 @@ export function GeneratorRoute({
   return (
     <div style={{ ["--top-nav" as string]: `${TOP_NAV_HEIGHT}px` }}>
       <Suspense>
-        <GeneratorInner surface={surface} initialView={initialView} signedIn={signedIn} />
+        <GeneratorInner
+          surface={surface}
+          initialView={initialView}
+          signedIn={signedIn}
+        />
       </Suspense>
     </div>
   )

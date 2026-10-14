@@ -23,8 +23,8 @@ export default async function LoginPage({
       <SiteHeader />
       <AuthCard title={`Sign in to ${BRAND.name}`}>
         <p className="text-q-body-sm-regular text-q-text-secondary">
-          Enter your email and we&apos;ll send you a link to sign in. No password needed. New here? The same
-          link creates your account.
+          Enter your email and we&apos;ll send you a link to sign in. No
+          password needed. New here? The same link creates your account.
         </p>
         <LoginForm callbackUrl={callbackUrl} />
       </AuthCard>

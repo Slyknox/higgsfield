@@ -306,14 +306,18 @@ export function ReferencePicker({
       excludeIds={media.map((item) => item.url)}
       onSelectMany={(selection) => onMediaAdd("auto", selection)}
       trigger={
-        trigger ? trigger(remaining) : <PromptBox.Pill
-          iconOnly
-          aria-label="Add references"
-          title="Add references"
-          disabled={!remaining}
-          className="disabled:opacity-40"
-          start={<Plus />}
-        />
+        trigger ? (
+          trigger(remaining)
+        ) : (
+          <PromptBox.Pill
+            iconOnly
+            aria-label="Add references"
+            title="Add references"
+            disabled={!remaining}
+            className="disabled:opacity-40"
+            start={<Plus />}
+          />
+        )
       }
     />
   )

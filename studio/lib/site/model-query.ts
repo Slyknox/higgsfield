@@ -16,7 +16,8 @@ export function resolveModelParam(
 ): ModelEntry | undefined {
   if (!param) return undefined
   const wanted = fold(param)
-  const match = models.find((m) => m.id === param) ??
+  const match =
+    models.find((m) => m.id === param) ??
     models.find((m) => fold(m.id) === wanted)
   if (!match) return undefined
   if (surface && match.surface !== surface) return undefined

@@ -7,11 +7,17 @@ export type ModeId = "create" | "edit" | "motion"
 const ORDER: ModeId[] = ["create", "edit", "motion"]
 
 const LABEL: Record<Surface, Record<ModeId, string>> = {
-  video: { create: "Create Video", edit: "Edit Video", motion: "Motion Control" },
+  video: {
+    create: "Create Video",
+    edit: "Edit Video",
+    motion: "Motion Control",
+  },
   image: { create: "Create Image", edit: "Edit Image", motion: "Motion" },
 }
 
-export function modeOf(model: Pick<ModelEntry, "id" | "requiredRoles">): ModeId {
+export function modeOf(
+  model: Pick<ModelEntry, "id" | "requiredRoles">
+): ModeId {
   if (/(^|-)motion(-|$)/.test(model.id)) return "motion"
   if (model.requiredRoles?.includes("source")) return "edit"
   return "create"
@@ -45,5 +51,7 @@ export function familyOf(model: Pick<ModelEntry, "icon" | "label">): string {
     qwen: "Qwen",
     "z-image": "Z-Image",
   }
-  return (model.icon && names[model.icon]) || model.label.split(" ")[0] || "Other"
+  return (
+    (model.icon && names[model.icon]) || model.label.split(" ")[0] || "Other"
+  )
 }

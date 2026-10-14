@@ -11,14 +11,25 @@ import { getPool } from "./db"
 import { getEnv } from "./env"
 
 /** Sends the sign-in email through Resend, or writes it to the local outbox. */
-export async function sendMagicLink({ to, url }: { to: string; url: string }): Promise<void> {
+export async function sendMagicLink({
+  to,
+  url,
+}: {
+  to: string
+  url: string
+}): Promise<void> {
   const env = getEnv()
   const subject = `Sign in to ${BRAND.name}`
   const props = { url, brand: BRAND.name, expiresInMinutes: MAGIC_LINK_MINUTES }
 
   if (env.EMAIL_TRANSPORT === "outbox") {
-    await getPool().query("insert into email_outbox (recipient, subject, url) values ($1, $2, $3)", [to, subject, url])
-    console.info(`[email] outbox: sign-in link for ${to} stored in email_outbox`)
+    await getPool().query(
+      "insert into email_outbox (recipient, subject, url) values ($1, $2, $3)",
+      [to, subject, url]
+    )
+    console.info(
+      `[email] outbox: sign-in link for ${to} stored in email_outbox`
+    )
     return
   }
 
@@ -31,5 +42,6 @@ export async function sendMagicLink({ to, url }: { to: string; url: string }): P
     text: magicLinkText(props),
   })
   // Never log the link or the provider's full response: the link signs someone in.
-  if (error) throw new Error(`Resend rejected the sign-in email (${error.name})`)
+  if (error)
+    throw new Error(`Resend rejected the sign-in email (${error.name})`)
 }
