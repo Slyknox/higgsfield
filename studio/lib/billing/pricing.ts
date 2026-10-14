@@ -40,6 +40,12 @@ function seconds(model: ModelEntry, settings: Record<string, unknown>): number {
   return 5
 }
 
+/** How many images one request makes (Soul's `batchSize`). */
+function images(settings: Record<string, unknown>): number {
+  const n = Number(settings.batchSize)
+  return Number.isInteger(n) && n > 1 ? n : 1
+}
+
 /** What one generation with these settings costs. */
 export function priceOf(
   model: ModelEntry,
@@ -54,7 +60,7 @@ export function priceOf(
     usd = (known ?? FALLBACK_VIDEO_USD_PER_SECOND) * seconds(model, settings)
   } else {
     estimated = true
-    usd = FALLBACK_IMAGE_USD
+    usd = FALLBACK_IMAGE_USD * images(settings)
   }
   const safeMarkup = Number.isFinite(markup) && markup >= 1 ? markup : 1
   // Round up so rounding never sells below cost.

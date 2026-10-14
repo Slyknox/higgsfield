@@ -51,6 +51,8 @@ test("prices come from list prices, rounded up, and scale with duration", () => 
 });
 
 test("unobserved models are flagged as estimates and priced high", () => {
+  const soul = getModel("soul-2");
+  assert.equal(priceOf(soul, { batchSize: "4" }, 2).credits, 4 * priceOf(soul, { batchSize: "1" }, 2).credits, "a batch of 4 costs 4×");
   const image = getModel("flux-2");
   const price = priceOf(image, {}, 2);
   assert.equal(price.estimated, true);
