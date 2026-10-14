@@ -26,6 +26,7 @@ import type {
   GenerationPlane,
   MediaItem,
   MediaRole,
+  ModelEntry,
   Surface,
 } from "@/generation/catalog"
 import {
@@ -50,6 +51,7 @@ import {
   type AssetSelection,
 } from "@/lib/studio/uploads"
 import { useRuns } from "@/lib/studio/use-runs"
+import { cn } from "@/lib/utils"
 
 /**
  * StudioTemplate — the full creative workspace: projects-first sidebar, hero,
@@ -262,13 +264,28 @@ export interface StudioTemplateProps {
   title?: string
   /** Hero headline above the dock. */
   headline?: string
+  /** Model to select when mounted or when it changes (e.g. from `?model=`). */
+  initialModel?: string
+  /** Surface the route is for; switches to its first model when the active one differs. */
+  routeSurface?: Surface
+  /** Starting view: the Home hero or the full generations feed. */
+  initialView?: "home" | "all"
+  /** Called when the user picks a model (picker, surface rail, template). */
+  onUserModelChange?: (model: ModelEntry) => void
+  /** Height of the shell; defaults to the full viewport. */
+  className?: string
 }
 
 export function StudioTemplate({
   title = "Studio",
   headline = "Turn any idea into images and video",
+  initialModel,
+  routeSurface,
+  initialView = "home",
+  onUserModelChange,
+  className,
 }: StudioTemplateProps) {
-  const [view, setView] = useState<StudioView>({ kind: "home" })
+  const [view, setView] = useState<StudioView>({ kind: initialView })
   const [collapsed, setCollapsed] = useState(false)
   const [prompt, setPrompt] = useState("")
   const [media, setMedia] = useState<MediaItem[]>([])
@@ -331,6 +348,26 @@ export function StudioTemplate({
   useEffect(() => {
     void hasPlatformCredentials().then(setKeyConfigured)
   }, [])
+
+  // The URL picks the model: an explicit model wins, else the route's surface.
+  useEffect(() => {
+    if (initialModel && MODELS.some((m) => m.id === initialModel)) {
+      setActiveModel(initialModel)
+      return
+    }
+    if (routeSurface && useActive.getState().surface !== routeSurface) {
+      const first = MODELS.find((m) => m.surface === routeSurface)
+      if (first) setActiveModel(first.id)
+    }
+  }, [initialModel, routeSurface, setActiveModel])
+
+  const pickModel = useCallback(
+    (id: string) => {
+      setActiveModel(id)
+      onUserModelChange?.(getModel(id))
+    },
+    [onUserModelChange, setActiveModel]
+  )
 
   const galleryItems = useMemo(
     () => runs.records.flatMap(runToGalleryItems),
@@ -417,7 +454,7 @@ export function StudioTemplate({
     setPrompt(t.prompt)
     if (t.modelId && MODELS.some((m) => m.id === t.modelId)) {
       const target = getModel(t.modelId)
-      setActiveModel(target.id)
+      pickModel(target.id)
       if (t.settings) setSetting(target.id, t.settings)
     } else if (t.kind !== surface && surfaces.includes(t.kind)) {
       changeSurface(t.kind)
@@ -427,7 +464,7 @@ export function StudioTemplate({
   // setModel derives the surface from the model, so switching surface = picking its first model.
   const changeSurface = (next: Surface) => {
     const first = MODELS.find((m) => m.surface === next)
-    if (first) setActiveModel(first.id)
+    if (first) pickModel(first.id)
   }
 
   const dock: DockProps = {
@@ -438,7 +475,7 @@ export function StudioTemplate({
     model,
     onModelChange: (id) => {
       setLocalError(null)
-      setActiveModel(id)
+      pickModel(id)
     },
     settings,
     onSettingChange: (key, value) => setSetting(model.id, { [key]: value }),
@@ -497,7 +534,9 @@ export function StudioTemplate({
   }
 
   return (
-    <div className="flex h-dvh overflow-hidden bg-background">
+    <div
+      className={cn("flex h-dvh overflow-hidden bg-background", className)}
+    >
       <StudioSidebar
         title={title}
         view={view}
