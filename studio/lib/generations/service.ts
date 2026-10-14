@@ -12,6 +12,7 @@ import {
   refundGeneration,
 } from "@/lib/billing/credits"
 import { priceOf } from "@/lib/billing/pricing"
+import { claimProjectForGeneration } from "@/lib/projects/service"
 
 import type { MediaStorage } from "./storage"
 import {
@@ -183,12 +184,13 @@ export async function createGeneration(
         "too_many_running",
         `You can run ${max} generations at once. Wait for one to finish.`
       )
+    const project = await claimProjectForGeneration(client, userId, projectId)
     const inserted = await client.query<Row>(
       `insert into generations (user_id, project_id, surface, model_id, model_path, prompt, settings, media, status, cost)
        values ($1, $2, $3, $4, $5, $6, $7, $8, 'pending_submit', $9) returning ${COLUMNS}`,
       [
         userId,
-        projectId ?? null,
+        project,
         model.surface,
         model.id,
         path,
