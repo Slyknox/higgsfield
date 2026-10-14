@@ -1,6 +1,7 @@
 // Runs against a real Postgres. Skipped unless TEST_DATABASE_URL is set.
 // The schema in that database is dropped and rebuilt: never point it at real data.
 import assert from "node:assert/strict";
+import { readdirSync } from "node:fs";
 import { after, before, test } from "node:test";
 
 import pg from "pg";
@@ -27,10 +28,11 @@ after(async () => {
 
 const { hitRateLimit } = await import("../lib/auth/rate-limit.ts");
 
-test("migrations are idempotent", { skip }, async () => {
+test("migrations are idempotent: a rerun applies nothing new", { skip }, async () => {
+  const files = readdirSync(new URL("../db/migrations/", import.meta.url)).filter((f) => f.endsWith(".sql"));
   await migrate(url, () => {});
   const { rows } = await pool.query("select count(*)::int as n from schema_migrations");
-  assert.equal(rows[0].n, 1);
+  assert.equal(rows[0].n, files.length);
 });
 
 test("every table has row level security on, so Supabase's public API reads nothing", { skip }, async () => {
