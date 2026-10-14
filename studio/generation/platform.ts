@@ -59,7 +59,6 @@ export function createPlatformClient(options: PlatformClientOptions) {
     body?: Record<string, unknown>
   ) {
     const url = `${baseUrl}${path}`
-    console.info("[platform] request", { method, url, body: body ?? null })
     const response = await fetchImpl(url, {
       method,
       headers: {
@@ -70,12 +69,12 @@ export function createPlatformClient(options: PlatformClientOptions) {
     })
 
     const payload = await readJson(response)
-    // Signed upload URLs are credentials; do not write them to logs.
-    console.info("[platform] response", {
+    // Path only: the query can carry our webhook token, bodies hold prompts and
+    // signed URLs, and responses hold users' media links. None of it belongs in logs.
+    console.info("[platform]", {
       method,
-      url,
+      path: path.split("?")[0],
       status: response.status,
-      ...(path === UPLOAD_PATH ? {} : { body: payload }),
     })
     if (!response.ok) throw new PlatformError(response.status, payload)
     return payload
@@ -91,11 +90,16 @@ export function createPlatformClient(options: PlatformClientOptions) {
     },
     async submit(
       model: string,
-      input: Record<string, unknown>
+      input: Record<string, unknown>,
+      options: { webhookUrl?: string } = {}
     ): Promise<QueuedGeneration> {
       if (!isModelId(model))
         throw new PlatformError(400, { detail: "Invalid model" })
-      return mapQueued(await send("POST", `/${model}`, input))
+      // Higgsfield posts terminal statuses to `hf_webhook`; the URL carries our own token.
+      const query = options.webhookUrl
+        ? `?hf_webhook=${encodeURIComponent(options.webhookUrl)}`
+        : ""
+      return mapQueued(await send("POST", `/${model}${query}`, input))
     },
     async status(requestId: string): Promise<GenerationStatus> {
       if (!requestId)
