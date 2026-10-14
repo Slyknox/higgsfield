@@ -52,3 +52,23 @@ Settings sent: `resolution` (480p/720p), `generate_audio`, `duration` (4–30 s)
   reference uploads still need testing with a real key.
 - All 28 installed model files stay in the picker. Only Seedance 2.5 is
   covered by the new tests.
+
+## Site frame (Phase 6, first pass)
+
+- **Brand:** `design.ai`, taken from the `BRAND_NAME` value in the build
+  prompt. One place to change it: `lib/site/brand.ts`.
+- **Top nav:** the template contract says "no app header"; the build prompt
+  overrides it with the higgsfield.ai nav. The studio shell sits under it at
+  `100dvh - 56px` and keeps its own sidebar, dock and feed.
+- **Routes:** `/` Explore, `/image` and `/video` (accepting `?model=`), and
+  `/assets` (the feed view). Nav links appear only for pages that exist.
+- **URL sync:** `?model=` is applied on load. The URL is rewritten only when
+  the user picks a model, so a model remembered in localStorage can't override
+  a shared link.
+- **Model copy:** descriptions and badges live in `lib/site/model-meta.ts`, not
+  in the model files, so those stay refreshable from the registry. A test
+  fails if an installed model has no description.
+- **Badges:** use lime (`bg-primary`) like higgsfield.ai, a small exception to
+  the template's "lime only for Generate and active states" rule.
+- **Explore art:** abstract per-provider gradients, not fake product
+  screenshots. They're replaced by our own generated media in Phase 7.
