@@ -1,0 +1,62 @@
+name: Studio
+
+on:
+  push:
+    paths:
+      - "studio/**"
+      - "tools/jev/**"
+      - ".github/workflows/studio.yml"
+  pull_request:
+    paths:
+      - "studio/**"
+      - "tools/jev/**"
+      - ".github/workflows/studio.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: studio-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  studio:
+    name: Typecheck, lint, test, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: studio
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: studio/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm models
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+        env:
+          NEXT_TELEMETRY_DISABLED: "1"
+          HF_API_BASE_URL: https://api.higgsfield.ai
+
+  jev-tools:
+    name: JEV tooling unit tests
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: tools/jev
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - run: uv run --no-project --with "ruff>=0.14,<1" ruff check .
+      # Pure modules only: JEV itself, Chrome and API keys are never used in CI.
+      - run: uv run --no-project --with "pytest>=8.4,<9" pytest
+        env:
+          PYTHONPATH: .
