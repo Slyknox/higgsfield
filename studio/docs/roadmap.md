@@ -13,8 +13,8 @@ recommend before launch, and the decisions only the owner can make. Updated
 | 2. Auth | Done (local) | Magic-link sign-in on Postgres, tested end to end with the local outbox. Needs Supabase and Resend keys to go live (`docs/setup.md`). |
 | 3. Generation core | Done (offline) | Platform key, Postgres history per user, webhook, cron reconciler, R2/local copy, cancel, delete. Tested against a fake Higgsfield; not yet against the real API (no key here). |
 | 4. All models | Partial | 38 template entries. Audio and the "check and add" list need the live docs. |
-| 5. Credits and Stripe | Not started | Needs final prices and a Stripe account. |
-| 6. UI clone | In progress | Top nav, menus, Explore, `?model=` routes and the left-panel generator done. Next: Pricing, Account, Effects and Community (after Phases 2 and 5). |
+| 5. Credits and Stripe | Partial | Prepaid credit ledger, price on Generate, refunds and the `BILLING_ENABLED` switch done. Stripe (purchases) needs prices and a Stripe account. |
+| 6. UI clone | In progress | Top nav, menus, Explore, `?model=` routes, the left-panel generator, Account, Effects and Admin done. Next: Pricing (after Stripe) and Community. |
 | 7. Content and polish | Not started | Cover media needs a generation budget. |
 | 8. Hardening and deploy | Not started | |
 | Dev tooling: JEV | Done | `tools/jev`: inventory and smoke runs, developer-only, guarded. |
@@ -102,14 +102,15 @@ should follow within weeks, **P2** can wait.
 | Generation history in Postgres, owned per user | Done | Phase 3. |
 | Higgsfield webhook + reconciler + R2 copy | Done | Phase 3. Needs R2 keys and a public URL to go live. |
 | Credits, pricing, Stripe Checkout, Portal, webhooks | P0 | Phase 5. Needs your prices. |
-| Pricing page, Account page (balance, history, plan) | P0 | After Phase 5. |
-| Reference uploads tied to users, size and rate limits | Partial | Recorded per user and rate-limited; the library still lists them from the browser. |
-| Projects in Postgres (today: browser only) | P1 | |
+| Account page (balance, history, usage, deletion) | Done | Plans and purchases wait for Stripe. |
+| Pricing page and credit purchases | P0 | After Stripe. |
+| Reference uploads tied to users, size and rate limits | Done | Listed from Postgres once the upload is confirmed. Files stay in Higgsfield storage. |
+| Projects in Postgres | Done | Old browser-only projects are imported on first load. |
 | Audio surface (Seed Audio, TTS, music) | P1 | Needs model schemas from docs.higgsfield.ai. |
-| Effects / presets gallery with our own covers | P1 | Phase 7 content. |
+| Effects / presets gallery | Done | 11 effects. Covers are abstract art until we generate our own (Phase 7). |
 | Community feed (publish, report, moderate) | P2 | Adds moderation load; launch without it. |
 | Upscale, background removal, outpaint | P2 | Only if the REST API exposes them. |
-| Admin panel (users, credits, generations, moderation) | P1 | Needed before the first support ticket. |
+| Admin panel (users, credits, generations) | Done | Moderation tools come with the community feed. |
 
 ### Legal and trust & safety
 
@@ -120,7 +121,8 @@ should follow within weeks, **P2** can wait.
 | Prompt screening before submit, report button, takedown process | P0 | Higgsfield's `nsfw` status is a backstop, not a policy. |
 | Child-safety process | P0 | US platforms that host user content must report child sexual abuse material to NCMEC. Have a written process and a contact. |
 | Cookie consent and analytics opt-in (EU/UK) | P0 if you serve the EU | |
-| Account deletion and data export (GDPR/CCPA) | P1 | Deletes rows, sessions and R2 files. |
+| Account deletion (GDPR/CCPA) | Done | Deletes rows, sessions and R2 files; Higgsfield-stored reference files have no delete API. |
+| Data export (GDPR/CCPA) | P1 | |
 | Age gate (13+ or 18+) | P0 | Decide with your lawyer; affects ToS and sign-up. |
 | Trademark search for the final brand | P0 | |
 

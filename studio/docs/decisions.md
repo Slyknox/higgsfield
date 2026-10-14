@@ -169,3 +169,36 @@ Settings sent: `resolution` (480p/720p), `generate_audio`, `duration` (4–30 s)
   listed files this app deleted.
 - **Not yet:** reference uploads are recorded per user but the asset library
   still lists them from the browser; projects are still browser-local.
+
+## Credits, projects, account, effects, admin
+
+- **Billing is a switch.** `BILLING_ENABLED=false` (default) leaves
+  generations free; `true` charges prepaid credits (1 credit = $0.01). The
+  same `priceOf` runs on the server and on the Generate button.
+- **Debit inside the insert transaction**, under the existing per-user
+  advisory lock: no credits means no row and nothing sent to Higgsfield.
+  Refunds are one SQL statement guarded by a unique index on
+  `(generation_id, reason)`, so the webhook, status route and reconciler can
+  all call it. The reconciler also retries refunds that failed.
+- **Prices only for observed list prices** (Seedance 2.5, Kling 3.0 Standard,
+  MiniMax H3). Every other model, including Pro/4K/Edit variants, uses a
+  deliberately high fallback marked "estimated" until its price is known.
+- **Deleting a running generation** refunds only if Higgsfield accepted the
+  cancel; otherwise it still bills us.
+- **Projects use browser-chosen UUIDs**, so a project is usable before the
+  insert returns. A generation joins a project only if the user owns it.
+  Old browser-only projects are imported once, then cleared.
+- **The upload library lists confirmed uploads only.** The row is written
+  when the signed URL is issued; the browser confirms after its PUT.
+- **Account deletion** asks for the email typed back, cancels running work,
+  deletes the user (rows cascade) and then the stored files. It refuses to
+  run without storage settings rather than leave files behind.
+- **Effects** are recipes (model + prompt + settings) in
+  `lib/site/effects.ts`. A link carries `?model=` and `?effect=`; the
+  generator fills the prompt and settings once and the user presses
+  Generate. The template picker draws from the same list, so the scaffold's
+  placeholder art is gone.
+- **Admin** is a 404 for non-admins. Every admin page and action calls
+  `requireAdmin()`. Credit adjustments go through the ledger with the admin's
+  id and a reason the user sees. Roles are set with `pnpm admin:role`.
+

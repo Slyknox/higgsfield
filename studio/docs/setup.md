@@ -86,7 +86,31 @@ a Vercel Pro plan; on Hobby the cron runs once a day. Results still arrive
 through the webhook and the status route, but runs whose webhook is lost wait
 longer to be finished or failed.
 
+Credits:
+
+| Variable | Value |
+|---|---|
+| `BILLING_ENABLED` | `true` to charge credits for generations; `false` (default) makes them free |
+| `CREDIT_MARKUP` | Retail price ÷ Higgsfield list price, default `2` |
+| `SIGNUP_CREDITS` | Credits a new account starts with, default `0` |
+
+Until Stripe is connected, credits only come from `SIGNUP_CREDITS` and admin
+adjustments. With billing off, anyone who signs in generates on your
+Higgsfield balance, so keep it off only while the site is private.
+
 Stripe keys come with Phase 5.
+
+## Admins
+
+Sign in once with the account, then from `studio/` with `DATABASE_URL` set:
+
+```bash
+pnpm admin:role you@your-domain.com          # make an admin
+pnpm admin:role you@your-domain.com user     # take it away
+```
+
+The change applies on the next page load. `/admin` returns 404 to everyone
+else.
 
 ## Cloudflare R2 (media storage)
 

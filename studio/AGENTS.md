@@ -22,7 +22,11 @@ end. Rendering the shipped examples is not completion.
   cancel, delete), storage drivers and webhook tokens. Dependencies are passed
   in, so it runs in tests against Postgres and the fake Higgsfield.
 - `lib/studio/` — the `useRuns` controller (history from Postgres via
-  `/api/generations`), zustand projects and uploads.
+  `/api/generations`), zustand projects and uploads backed by the API.
+- `lib/billing/`, `lib/projects/`, `lib/uploads/`, `lib/account/`,
+  `lib/admin/` — services for credits, projects, the upload library, the
+  account page and the admin panel. Like `lib/generations/`, they take the
+  database as an argument and are tested against Postgres.
 
 ## Runtime boundaries — preserve these
 
@@ -46,8 +50,14 @@ end. Rendering the shipped examples is not completion.
   upload header and no credentials. Record the public URL only after success;
   never log signed URLs. No separate storage token is needed.
 - Generation history lives in Postgres (`generations` table) behind the
-  `useRuns` interface. Projects are still browser-local
-  (`lib/studio/projects.ts`) until they move to Postgres.
+  `useRuns` interface. Projects (`projects` table, `lib/projects/service.ts`)
+  and the reference library (`uploads`, `lib/uploads/service.ts`) are in
+  Postgres too; the zustand stores in `lib/studio/` only cache them.
+- Credits (`lib/billing/`): with `BILLING_ENABLED`, a generation is debited
+  in the transaction that inserts it and refunded when it ends failed,
+  blocked or canceled. Never move credits outside `lib/billing/credits.ts`.
+- Admin pages and admin server actions each call `requireAdmin()`
+  (`lib/server/admin.ts`); a layout gate alone doesn't protect actions.
 - The justified gallery is virtualized by rows. Never unmount loaded media
   because scroll velocity is high; never filter out failed terminal runs the
   user already saw generating.
