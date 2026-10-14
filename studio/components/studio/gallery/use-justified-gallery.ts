@@ -7,6 +7,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react"
 import type { RefObject } from "react"
 import { JustifiedLayoutEngine } from "./justified-engine"
@@ -23,6 +24,28 @@ import type { GalleryItem } from "./gallery-types"
  */
 export const DENSITY_ROW_HEIGHTS = [220, 280, 360, 460, 580] as const
 export const DEFAULT_DENSITY = 1
+
+const DENSITY_KEY = "studio.gallery.density"
+
+function subscribeToStorage(onChange: () => void): () => void {
+  window.addEventListener("storage", onChange)
+  return () => window.removeEventListener("storage", onChange)
+}
+
+/** The tile size this browser picked last time, if any. */
+function savedDensity(): number | null {
+  try {
+    const value = Number(window.localStorage.getItem(DENSITY_KEY))
+    return Number.isInteger(value) &&
+      value >= 0 &&
+      value < DENSITY_ROW_HEIGHTS.length &&
+      window.localStorage.getItem(DENSITY_KEY) !== null
+      ? value
+      : null
+  } catch {
+    return null
+  }
+}
 
 const GAP = 6
 /** Rows within this many px of the viewport edge are rendered (windowing). */
@@ -61,7 +84,14 @@ export function useJustifiedGallery(
 ): UseJustifiedGalleryResult {
   const viewportRef = useRef<HTMLDivElement | null>(null)
   const [width, setWidth] = useState(0)
-  const [density, setDensityState] = useState(DEFAULT_DENSITY)
+  // The saved size is read from storage on the client only (null during SSR).
+  const saved = useSyncExternalStore(
+    subscribeToStorage,
+    savedDensity,
+    () => null
+  )
+  const [chosen, setDensityState] = useState<number | null>(null)
+  const density = chosen ?? saved ?? DEFAULT_DENSITY
   const [viewportHeight, setViewportHeight] = useState(0)
   // Snapshot scroll position only when the rendered row window changes.
   const [range, setRange] = useState({ startRow: 0, endRow: 0, scrollTop: 0 })
@@ -206,6 +236,11 @@ export function useJustifiedGallery(
       const el = viewportRef.current
       if (el != null) anchorRef.current = engine.findAnchor(el.scrollTop)
       setDensityState(level)
+      try {
+        window.localStorage.setItem(DENSITY_KEY, String(level))
+      } catch {
+        // Private mode or blocked storage: the choice lasts for this page only.
+      }
     },
     [engine]
   )
