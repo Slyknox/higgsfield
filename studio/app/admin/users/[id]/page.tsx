@@ -4,6 +4,7 @@ import { Section, Stat } from "@/components/site/page/section"
 import { getUser, listGenerations } from "@/lib/admin/service"
 import { listLedger } from "@/lib/billing/credits"
 import { LEDGER_LABELS, formatCredits } from "@/lib/billing/labels"
+import { requireAdmin } from "@/lib/server/admin"
 import { getPool } from "@/lib/server/db"
 
 import { dateTime, day } from "../../format"
@@ -17,6 +18,8 @@ export default async function AdminUserPage({
 }: {
   params: Promise<{ id: string }>
 }) {
+  // Checked per page: a client can skip the layout by claiming its segment.
+  await requireAdmin()
   const id = Number((await params).id)
   const pool = getPool()
   const user = await getUser(pool, id)

@@ -76,3 +76,22 @@ test("admin actions refuse non-admins", async ({ page }) => {
     expect(res?.status(), path).toBe(404)
   }
 })
+
+test("a forged router state can't skip the admin check", async ({ page }) => {
+  const secret = freshEmail("leak-target")
+  await db().query("insert into users (email) values ($1)", [secret])
+  await signIn(page, db(), freshEmail("forger"), "/")
+  // Claims the /admin layout is already rendered, so only the page segment runs.
+  const tree = ["", { children: ["admin", { children: ["__PAGE__", {}] }] }]
+  for (const path of ["/admin/users", "/admin/generations", "/admin"]) {
+    const res = await page.request.get(path, {
+      headers: {
+        RSC: "1",
+        "Next-Router-State-Tree": encodeURIComponent(JSON.stringify(tree)),
+      },
+    })
+    const body = await res.text()
+    expect(body, path).not.toContain(secret)
+    expect(body, path).not.toContain("Unspent credits")
+  }
+})

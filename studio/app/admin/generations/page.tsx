@@ -6,6 +6,7 @@ import {
   listGenerations,
   STUCK_MINUTES,
 } from "@/lib/admin/service"
+import { requireAdmin } from "@/lib/server/admin"
 import { getPool } from "@/lib/server/db"
 import { cn } from "@/lib/utils"
 
@@ -28,6 +29,8 @@ export default async function AdminGenerationsPage({
 }: {
   searchParams: Promise<{ status?: string; stuck?: string }>
 }) {
+  // Checked per page: a client can skip the layout by claiming its segment.
+  await requireAdmin()
   const sp = await searchParams
   const status = isGenerationStatus(sp.status) ? sp.status : undefined
   const stuck = sp.stuck === "1"

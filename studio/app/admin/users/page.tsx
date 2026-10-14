@@ -4,6 +4,7 @@ import { Section } from "@/components/site/page/section"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { listUsers } from "@/lib/admin/service"
+import { requireAdmin } from "@/lib/server/admin"
 import { getPool } from "@/lib/server/db"
 
 import { day } from "../format"
@@ -15,6 +16,8 @@ export default async function AdminUsersPage({
 }: {
   searchParams: Promise<{ q?: string }>
 }) {
+  // Checked per page: a client can skip the layout by claiming its segment.
+  await requireAdmin()
   const q = (await searchParams).q?.slice(0, 254) ?? ""
   const users = await listUsers(getPool(), { query: q, limit: 100 })
   return (

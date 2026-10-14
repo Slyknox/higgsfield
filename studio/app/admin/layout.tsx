@@ -17,6 +17,7 @@ export default async function AdminLayout({
 }: {
   children: ReactNode
 }) {
+  // Hides the admin chrome; each page also checks, since a layout can be skipped.
   await requireAdmin()
   return (
     <>

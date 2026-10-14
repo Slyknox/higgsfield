@@ -7,6 +7,7 @@ import {
   STUCK_MINUTES,
 } from "@/lib/admin/service"
 import { getBillingConfig } from "@/lib/server/billing-env"
+import { requireAdmin } from "@/lib/server/admin"
 import { getPool } from "@/lib/server/db"
 
 import { ReconcileButton } from "./forms"
@@ -15,6 +16,8 @@ import { GenerationsTable } from "./generations-table"
 export const dynamic = "force-dynamic"
 
 export default async function AdminOverviewPage() {
+  // Checked per page: a client can skip the layout by claiming its segment.
+  await requireAdmin()
   const pool = getPool()
   const [o, stuck] = await Promise.all([
     getOverview(pool),
