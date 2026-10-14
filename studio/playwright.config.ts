@@ -4,7 +4,11 @@ import { defineConfig, devices } from "@playwright/test"
 // throwaway Postgres database. E2E_DATABASE_URL's public schema is wiped.
 const PORT = Number(process.env.E2E_PORT ?? 3123)
 const BASE_URL = `http://localhost:${PORT}`
-const DATABASE_URL = process.env.E2E_DATABASE_URL ?? "postgres://postgres@127.0.0.1:54329/studio_test"
+const DATABASE_URL =
+  process.env.E2E_DATABASE_URL ??
+  "postgres://postgres@127.0.0.1:54329/studio_test"
+// The fake Higgsfield started by global setup (e2e/support/fake-higgsfield.ts).
+const FAKE_HF_PORT = Number(process.env.E2E_FAKE_HF_PORT ?? 4010)
 
 export default defineConfig({
   testDir: "e2e",
@@ -25,12 +29,18 @@ export default defineConfig({
     timeout: 60_000,
     env: {
       DATABASE_URL,
-      AUTH_SECRET: process.env.E2E_AUTH_SECRET ?? "e2e-only-secret-not-for-production-0123456789",
+      AUTH_SECRET:
+        process.env.E2E_AUTH_SECRET ??
+        "e2e-only-secret-not-for-production-0123456789",
       AUTH_URL: BASE_URL,
       EMAIL_TRANSPORT: "outbox",
-      HF_API_BASE_URL: "https://api.higgsfield.ai",
+      HF_API_BASE_URL: `http://127.0.0.1:${FAKE_HF_PORT}`,
+      HF_API_KEY: "fake-test-key",
+      STORAGE_DRIVER: "local",
+      LOCAL_MEDIA_DIR: ".data/e2e-media",
+      HF_WEBHOOK_SECRET: "e2e-webhook-secret-not-for-production-0123456789",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },
-  metadata: { databaseUrl: DATABASE_URL },
+  metadata: { databaseUrl: DATABASE_URL, fakeHiggsfieldPort: FAKE_HF_PORT },
 })
