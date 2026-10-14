@@ -72,3 +72,26 @@ Settings sent: `resolution` (480p/720p), `generate_audio`, `duration` (4–30 s)
   the template's "lime only for Generate and active states" rule.
 - **Explore art:** abstract per-provider gradients, not fake product
   screenshots. They're replaced by our own generated media in Phase 7.
+
+## Generator layout (Phase 6, second pass)
+
+- **`/image` and `/video`** use `layouts/generator.tsx`: the higgsfield.ai
+  left control panel (mode tabs, model card with Change, inputs, prompt,
+  settings, sticky Generate) and a right canvas (History / How it works).
+  `/assets` keeps the template's projects sidebar and feed.
+- **One dock implementation.** The dock's state and actions moved from
+  `layouts/studio.tsx` into `lib/studio/use-studio-dock.ts`; both layouts call
+  it, so validation, generate, cancel and uploads can't drift apart.
+- **Reused, not forked:** `MediaInputs`, `ReferencePicker`, `PillSelect` and
+  `modelIcon` are now exported from `studio-prompt-box.tsx` (backward
+  compatible; `ReferencePicker` takes an optional custom trigger).
+- **Mode tabs** come from the catalog (`lib/site/model-modes.ts`): a model that
+  needs a source clip is an editor, a `motion` model is Motion Control, the
+  rest create. Image has a single mode, so it shows no tabs.
+- **No Frames / References sub-tabs.** The build prompt lists them, but the
+  template contract says to infer the input mode from attachments. The
+  template wins on UI patterns: frame slots and the reference drop zone
+  are both shown, and mixing them is blocked with a plain error.
+- **The key button sits in the canvas header** because the generator has no
+  sidebar. KeyDialog stays the only place that collects a key. Both go away
+  when Phase 2 moves to a server-side platform key.

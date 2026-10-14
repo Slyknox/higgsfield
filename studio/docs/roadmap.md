@@ -14,7 +14,7 @@ recommend before launch, and the decisions only the owner can make. Updated
 | 3. Generation core | Partial | Template submit, poll, cancel and upload work with a user key. Not yet: server key, Mongo history, webhook, reconciler, R2 copy. No live generation tested yet (no key in the container). |
 | 4. All models | Partial | 38 template entries. Audio and the "check and add" list need the live docs. |
 | 5. Credits and Stripe | Not started | Needs final prices and a Stripe account. |
-| 6. UI clone | In progress | Top nav, menus, Explore and `?model=` routes done. Next: left-panel generator, then Pricing, Effects, Community, Account. |
+| 6. UI clone | In progress | Top nav, menus, Explore, `?model=` routes and the left-panel generator done. Next: Pricing, Account, Effects and Community (after Phases 2 and 5). |
 | 7. Content and polish | Not started | Cover media needs a generation budget. |
 | 8. Hardening and deploy | Not started | |
 | Dev tooling: JEV | Done | `tools/jev`: inventory and smoke runs, developer-only, guarded. |
