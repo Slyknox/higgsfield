@@ -7,11 +7,13 @@ import type { ModelEntry } from "@/generation/catalog"
  * Higgsfield list prices in USD per second of video, observed in the console
  * on 2026-10-14 (docs/ui-inventory.md). List, not promotional, prices.
  */
-const VIDEO_USD_PER_SECOND: { prefix: string; usd: number }[] = [
-  { prefix: "seedance-2.5", usd: 0.206 },
-  { prefix: "kling-3", usd: 0.084 },
-  { prefix: "minimax-h3", usd: 0.13 },
-]
+const VIDEO_USD_PER_SECOND: Record<string, number> = {
+  // Exact model ids only: Pro, 4K, Edit and Motion variants are priced
+  // differently and stay on the fallback until their list price is known.
+  "seedance-2.5": 0.206,
+  "kling-3-std": 0.084,
+  "minimax-h3": 0.13,
+}
 
 /**
  * Prices for models we haven't observed yet. Deliberately high, so an
@@ -47,9 +49,9 @@ export function priceOf(
   let usd: number
   let estimated = false
   if (model.surface === "video") {
-    const known = VIDEO_USD_PER_SECOND.find((p) => model.id.startsWith(p.prefix))
-    estimated = !known
-    usd = (known?.usd ?? FALLBACK_VIDEO_USD_PER_SECOND) * seconds(model, settings)
+    const known = VIDEO_USD_PER_SECOND[model.id]
+    estimated = known === undefined
+    usd = (known ?? FALLBACK_VIDEO_USD_PER_SECOND) * seconds(model, settings)
   } else {
     estimated = true
     usd = FALLBACK_IMAGE_USD

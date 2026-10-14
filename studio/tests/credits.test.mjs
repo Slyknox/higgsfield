@@ -42,7 +42,10 @@ test("prices come from list prices, rounded up, and scale with duration", () => 
   const seedance = getModel("seedance-2.5");
   assert.deepEqual(priceOf(seedance, { duration: 5 }, 2), { credits: 206, usd: 0.206 * 5, estimated: false });
   assert.equal(priceOf(seedance, { duration: 10 }, 2).credits, 412);
-  assert.equal(priceOf(getModel("kling-3-pro"), { duration: 5 }, 2).credits, 84);
+  assert.equal(priceOf(getModel("kling-3-std"), { duration: 5 }, 2).credits, 84);
+  const pro = priceOf(getModel("kling-3-pro"), { duration: 5 }, 2);
+  assert.equal(pro.estimated, true, "variants don't inherit the base model's price");
+  assert.ok(pro.credits > 84);
   assert.equal(priceOf(seedance, {}, 2).credits, 206, "uses the model's default duration");
   assert.equal(priceOf(seedance, { duration: 5 }, 0.5).credits, 103, "markup below 1 is treated as 1");
 });
