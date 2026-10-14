@@ -95,3 +95,35 @@ Settings sent: `resolution` (480p/720p), `generate_audio`, `duration` (4–30 s)
 - **The key button sits in the canvas header** because the generator has no
   sidebar. KeyDialog stays the only place that collects a key. Both go away
   when Phase 2 moves to a server-side platform key.
+
+## Sign-in (Phase 2)
+
+- **Postgres on Supabase, not MongoDB.** The owner has Supabase and no Atlas
+  account. Postgres also suits the credit ledger better: one transaction can
+  debit credits and record the generation together. Data access uses `pg`
+  directly; the Supabase JS client and Supabase Auth are not used.
+- **Auth.js v5 (`next-auth@5.0.0-beta.32`, pinned exactly)** with
+  `@auth/pg-adapter` 1.11.3; both use `@auth/core` 0.41.3. v5 is still
+  published as beta on npm; pinning avoids silent upgrades.
+- **Database sessions** (revocable; the role is read fresh on every request).
+- **Row level security** is on for every table with no policies, so
+  Supabase's public API can't read users, sessions or tokens.
+- **Email transport:** `resend` sends the React Email template; `outbox`
+  writes links to `email_outbox` for local development and tests. It is
+  refused unless `AUTH_URL` is localhost.
+- **Rate limits** live in Postgres (atomic upsert): 5 emails per address and
+  20 requests per IP per hour. The per-address check sits inside
+  `sendVerificationRequest`, so direct POSTs to the Auth.js endpoint hit it
+  too.
+- **`signIn(..., { redirect: false })`** keeps the check-email page on a clean
+  URL. Auth.js then reports a failed send as an `?error=` URL, not an
+  exception; `sendFailed()` treats that as failure. The E2E rate-limit test
+  caught the page saying "Check your email" when nothing had been sent.
+- **Signed-out Generate** saves the prompt as a draft in `localStorage`,
+  sends the user to sign in, and restores it on return, even when the magic
+  link opens a new tab.
+- **Route protection is per page** (`/assets` redirects to sign-in) rather
+  than in `proxy.ts`. Server actions and route handlers will check the
+  session themselves (Phase 3).
+- **Still bring-your-own-key** for generation until Phase 3 moves to the
+  platform key.

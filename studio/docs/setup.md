@@ -1,0 +1,74 @@
+# Setup: local development and production accounts
+
+## Local development
+
+You need Node 22, pnpm 10 and a Postgres 16 database (Docker works:
+`docker run -d -p 54329:5432 -e POSTGRES_HOST_AUTH_METHOD=trust -e POSTGRES_DB=studio_dev postgres:16`).
+
+```bash
+cd studio
+pnpm install
+cp .env.example .env.local      # then set AUTH_SECRET: npx auth secret
+pnpm db:migrate                 # applies db/migrations/*.sql to DATABASE_URL
+pnpm dev
+```
+
+With `EMAIL_TRANSPORT=outbox` no email is sent. The sign-in link is written to
+the `email_outbox` table and announced in the server log:
+
+```bash
+psql "$DATABASE_URL" -c "select url from email_outbox order by id desc limit 1"
+```
+
+The outbox only works when `AUTH_URL` is a localhost URL; the server refuses
+to start sign-in otherwise.
+
+## Tests
+
+```bash
+pnpm test                                        # unit tests; DB tests skip
+TEST_DATABASE_URL=postgres://... pnpm test       # plus Postgres tests (wipes that DB's public schema)
+pnpm build && E2E_DATABASE_URL=postgres://... pnpm test:e2e   # browser tests (wipes it too)
+```
+
+Point the test URLs at a throwaway database, never at Supabase production.
+
+## Supabase (database)
+
+1. Create a project. Pick the region closest to your Vercel region.
+2. **Project settings → Database → Connection string → URI**, using the
+   **transaction pooler** (port 6543). Append `?sslmode=require`.
+3. Run the migrations once from your machine:
+   `DATABASE_URL='postgres://...:6543/postgres?sslmode=require' pnpm db:migrate`
+4. Every app table has row level security on and no policies, so Supabase's
+   public API (anon and authenticated keys) can read nothing. The app connects
+   with the database password, which bypasses RLS. Don't add policies or
+   expose these tables through the Supabase client.
+
+The app doesn't use Supabase Auth or the Supabase JS client. Auth.js owns
+sign-in; Supabase is only the Postgres host.
+
+## Resend (sign-in email)
+
+1. Add and verify your sending domain (DNS records Resend shows you).
+2. Create an API key with "Sending access" only.
+3. Set `EMAIL_TRANSPORT=resend`, `AUTH_RESEND_KEY`, and
+   `EMAIL_FROM="<Brand> <login@your-domain>"`.
+
+## Vercel (hosting)
+
+Set these in **Project → Settings → Environment Variables** (Production and
+Preview):
+
+| Variable | Value |
+|---|---|
+| `DATABASE_URL` | Supabase pooler URI with `?sslmode=require` |
+| `AUTH_SECRET` | `npx auth secret` (a different one per environment) |
+| `AUTH_URL` | Your production URL, e.g. `https://your-domain.com` |
+| `EMAIL_TRANSPORT` | `resend` |
+| `AUTH_RESEND_KEY` | From Resend |
+| `EMAIL_FROM` | `Brand <login@your-domain.com>` |
+| `HF_API_BASE_URL` | `https://api.higgsfield.ai` |
+
+Coming in later phases: `HF_CREDENTIALS` (platform key, Phase 3), R2 keys
+(Phase 3), and Stripe keys (Phase 5).

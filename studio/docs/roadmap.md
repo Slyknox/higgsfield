@@ -10,7 +10,7 @@ recommend before launch, and the decisions only the owner can make. Updated
 |---|---|---|
 | 0. Research | Partial | `ui-inventory.md` from owner screenshots; `tools/jev` can now fill the rest. `docs.higgsfield.ai` is blocked from the build container, so `model-catalog.md` is still to write. |
 | 1. Scaffold | Done | Higgsfield Studio template in `studio/`. Still BYOK (each user pastes a key); swapping to one platform key waits on Phase 2 auth. |
-| 2. Auth | Not started | Needs MongoDB Atlas and Resend. |
+| 2. Auth | Done (local) | Magic-link sign-in on Postgres, tested end to end with the local outbox. Needs Supabase and Resend keys to go live (`docs/setup.md`). |
 | 3. Generation core | Partial | Template submit, poll, cancel and upload work with a user key. Not yet: server key, Mongo history, webhook, reconciler, R2 copy. No live generation tested yet (no key in the container). |
 | 4. All models | Partial | 38 template entries. Audio and the "check and add" list need the live docs. |
 | 5. Credits and Stripe | Not started | Needs final prices and a Stripe account. |
@@ -95,16 +95,15 @@ Decisions that block later phases, roughly in the order they're needed:
 
 1. **JEV Part B:** your master prompt was cut off at §5; Part B (JEV) never
    arrived. Is anything in it beyond inventory and smoke runs?
-2. **Repository:** move the studio to its own repo now (recommended), or keep
-   it in `Slyknox/higgsfield`?
+2. **Repository (answered: new repo).** Create an empty private
+   `Slyknox/design-ai-studio` and give the Claude GitHub App access; the
+   integration can't create repos itself.
 3. **Brand:** final name, logo, `PRODUCTION_URL`, `EMAIL_FROM` and
    `SUPPORT_EMAIL`.
-4. **Key model:** one platform key you fund (the build prompt's plan), or keep
-   bring-your-own-key (no billing needed)? Have you confirmed resale terms with
-   Higgsfield?
-5. **Accounts:** do you have MongoDB Atlas, Resend (with a verified domain),
-   Stripe, Cloudflare R2 and Vercel? Add their keys as environment secrets,
-   never in chat.
+4. **Key model (answered: platform key).** Have you confirmed resale terms
+   with Higgsfield?
+5. **Accounts (answered):** Supabase, Resend, Stripe, Vercel and R2. Add their
+   keys as environment secrets, never in chat. Supabase replaces MongoDB.
 6. **Pricing:** `CREDIT_MARKUP`, plan prices (Starter / Plus / Ultra, monthly
    and annual), top-up packs, and free sign-up credits.
 7. **Content policy:** are realistic people allowed? Age limit? Which regions
