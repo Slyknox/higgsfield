@@ -253,6 +253,10 @@ export function StudioTemplate({
   const [view, setView] = useState<StudioView>({ kind: initialView })
   const [collapsed, setCollapsed] = useState(false)
   const projectsStore = useProjects()
+  const loadProjects = useProjects((s) => s.load)
+  useEffect(() => {
+    void loadProjects()
+  }, [loadProjects])
   const projectId = view.kind === "project" ? view.projectId : undefined
 
   const { dock, runs, galleryItems, applyTemplate } = useStudioDock({
@@ -323,6 +327,14 @@ export function StudioTemplate({
         onCollapsedChange={setCollapsed}
       />
       <main className="relative flex min-w-0 flex-1 flex-col">
+        {projectsStore.error ? (
+          <p
+            role="alert"
+            className="mx-4 mt-3 rounded-lg bg-white/5 px-3 py-2 text-q-caption-sm-medium text-q-state-error-fg"
+          >
+            {projectsStore.error}
+          </p>
+        ) : null}
         {view.kind === "home" ? (
           <HomeState
             title={headline}
