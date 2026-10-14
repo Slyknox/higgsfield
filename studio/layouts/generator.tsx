@@ -494,7 +494,7 @@ export function GeneratorTemplate({
           </button>
           {credits && signedIn ? (
             <p className="text-q-caption-sm-regular text-q-text-secondary">
-              {credits.balance} credits left.{" "}
+              {credits.balance.toLocaleString("en-US")} credits left.{" "}
               <Link href="/account" className="underline underline-offset-2">
                 Account
               </Link>
