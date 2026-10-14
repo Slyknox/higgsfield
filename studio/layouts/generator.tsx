@@ -4,6 +4,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ChangeEvent,
 } from "react"
@@ -47,6 +48,7 @@ import {
   type ModeId,
 } from "@/lib/site/model-modes"
 import { priceOf } from "@/lib/billing/pricing"
+import { findEffect } from "@/lib/site/effects"
 import { saveDraft, takeDraft } from "@/lib/studio/draft"
 import { useCredits, type Credits } from "@/lib/studio/use-credits"
 import { useStudioDock } from "@/lib/studio/use-studio-dock"
@@ -267,7 +269,23 @@ export function GeneratorTemplate({
     onMediaRoleChange: dock.onMediaRoleChange,
     library: dock.library,
   }
-  const { onPromptChange } = dock
+  const { onPromptChange, onSettingChange: changeSetting } = dock
+  // An effect link (/video?model=…&effect=…) fills in its prompt and settings
+  // once. The model already comes from ?model=. Declared before the draft
+  // restore, so a prompt typed before signing in still wins.
+  const effect = findEffect(params.get("effect"))
+  const activeEffect =
+    effect && effect.modelId === model.id && effect.surface === surface
+      ? effect
+      : undefined
+  const appliedEffect = useRef<string | null>(null)
+  useEffect(() => {
+    if (!activeEffect || appliedEffect.current === activeEffect.id) return
+    appliedEffect.current = activeEffect.id
+    onPromptChange(activeEffect.prompt)
+    for (const [key, value] of Object.entries(activeEffect.settings ?? {}))
+      changeSetting(key, value)
+  }, [activeEffect, onPromptChange, changeSetting])
   // Bring back the prompt typed before the sign-in detour.
   useEffect(() => {
     const draft = takeDraft(surface)
@@ -319,6 +337,17 @@ export function GeneratorTemplate({
                 ))}
               </TabsList>
             </Tabs>
+          ) : null}
+
+          {activeEffect ? (
+            <p className="rounded-xl border border-white/10 bg-white/[0.04] px-3 py-2 text-q-caption-sm-regular text-q-text-secondary">
+              <span className="text-foreground">
+                Effect: {activeEffect.title}.
+              </span>{" "}
+              {activeEffect.input === "photo"
+                ? "Add a photo, adjust the prompt if you like, then press Generate."
+                : "Adjust the prompt if you like, then press Generate."}
+            </p>
           ) : null}
 
           <ModelCard
@@ -512,9 +541,9 @@ export function GeneratorTemplate({
               onDelete={(item) => runs.remove(item.runId)}
               emptyState={{
                 images: [
-                  "/presets/placeholder-2.svg",
-                  "/presets/placeholder-1.svg",
-                  "/presets/placeholder-3.svg",
+                  "/covers/abstract-2.svg",
+                  "/covers/abstract-1.svg",
+                  "/covers/abstract-3.svg",
                 ],
                 title: "No generations yet",
                 description: "Describe an idea on the left, then generate.",
