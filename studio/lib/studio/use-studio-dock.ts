@@ -80,6 +80,11 @@ export function useStudioDock({
   const settingsByModel = useSettings((s) => s.byModel)
   const setSetting = useSettings((s) => s.set)
   const uploads = useUploads((s) => s.items)
+  const loadUploads = useUploads((s) => s.load)
+  const uploadsLoaded = useUploads((s) => s.loaded)
+  useEffect(() => {
+    if (!uploadsLoaded) void loadUploads()
+  }, [loadUploads, uploadsLoaded])
   const runs = useRuns()
 
   const surfaces = useMemo(
