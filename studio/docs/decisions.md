@@ -201,4 +201,17 @@ Settings sent: `resolution` (480p/720p), `generate_audio`, `duration` (4–30 s)
 - **Admin** is a 404 for non-admins. Every admin page and action calls
   `requireAdmin()`. Credit adjustments go through the ledger with the admin's
   id and a reason the user sees. Roles are set with `pnpm admin:role`.
+- **Sign-up credits once per address.** `signup_grants` keeps a SHA-256 of
+  the lower-case email after an account is deleted, so delete-and-rejoin
+  can't farm `SIGNUP_CREDITS`. It's unsalted, so it is still personal data:
+  mention it in the privacy policy.
+- **Admin pages each call `requireAdmin()`.** A client can claim the `/admin`
+  layout is already rendered (`Next-Router-State-Tree`) and receive only the
+  page segment, so a layout-only gate leaked admin data. An E2E test forges
+  that header.
+- **Cancel is refused while a generation is still submitting**: there's no
+  Higgsfield request to cancel yet, and refunding would let the job run free.
+- **Known gap:** account deletion removes the files it can list. A finalizer
+  already copying a file at that moment can leave one public file behind.
+  Listing the user's storage prefix after deletion would close it.
 
