@@ -1,6 +1,12 @@
 "use client"
 
-import { useRef, useState, type ChangeEvent, type ReactNode } from "react"
+import {
+  useRef,
+  useState,
+  type ChangeEvent,
+  type ReactElement,
+  type ReactNode,
+} from "react"
 import {
   AudioLines,
   Check,
@@ -90,7 +96,7 @@ export interface StudioPromptBoxProps {
   className?: string
 }
 
-function modelIcon(model: ModelEntry): ReactNode {
+export function modelIcon(model: ModelEntry): ReactNode {
   return model.icon ? (
     // eslint-disable-next-line @next/next/no-img-element -- Static SVG logos do not need an image proxy.
     <img
@@ -119,7 +125,7 @@ const PICKER_POPUP = {
   collisionPadding: 16,
 } as const
 
-function PillSelect({
+export function PillSelect({
   value,
   options,
   onValueChange,
@@ -254,16 +260,20 @@ function mediaSlots(model: ModelEntry, inputMode?: string): MediaRole[] {
   )
 }
 
-function ReferencePicker({
+export function ReferencePicker({
   model,
   inputMode,
   media,
   onMediaAdd,
   library,
+  trigger,
 }: Pick<
   StudioPromptBoxProps,
   "model" | "inputMode" | "media" | "onMediaAdd" | "library"
->) {
+> & {
+  /** Custom trigger; receives whether any reference slot is left. */
+  trigger?: (remaining: number) => ReactElement
+}) {
   const limits = inputRoles(model, inputMode)
   const slots = mediaSlots(model, inputMode)
   const kinds = (Object.keys(REFERENCE_ROLE) as MediaKind[]).filter(
@@ -296,7 +306,7 @@ function ReferencePicker({
       excludeIds={media.map((item) => item.url)}
       onSelectMany={(selection) => onMediaAdd("auto", selection)}
       trigger={
-        <PromptBox.Pill
+        trigger ? trigger(remaining) : <PromptBox.Pill
           iconOnly
           aria-label="Add references"
           title="Add references"
@@ -309,7 +319,7 @@ function ReferencePicker({
   )
 }
 
-function MediaInputs({
+export function MediaInputs({
   model,
   inputMode,
   media,

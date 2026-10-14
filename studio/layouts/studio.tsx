@@ -1,7 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import type { ComponentProps } from "react"
+import { useEffect, useMemo, useRef, useState } from "react"
 import { Compass, Folder } from "lucide-react"
 
 import { StudioPromptBox } from "@/components/studio/studio-prompt-box"
@@ -20,37 +19,9 @@ import { StudioSidebar, type StudioView } from "@/components/studio/sidebar"
 import { UserGenerations } from "@/components/studio/user-generations"
 import type { GalleryItem } from "@/components/studio/gallery/gallery-types"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { hasPlatformCredentials } from "@/generation/actions"
-import { MODELS, getModel, parseSettings } from "@/generation/catalog"
-import type {
-  GenerationPlane,
-  MediaItem,
-  MediaRole,
-  ModelEntry,
-  Surface,
-} from "@/generation/catalog"
-import {
-  changeImageRole,
-  groupMedia,
-  inferInputMode,
-  inputRoles,
-  mergeMedia,
-  mergeReferences,
-} from "@/generation/catalog/media-inputs"
-import { toPlatform } from "@/generation/to-platform"
-import { useActive } from "@/generation/stores/active"
-import { useSettings } from "@/generation/stores/settings"
-import {
-  runToGalleryItems,
-  runToLibraryItems,
-} from "@/lib/studio/gallery-items"
+import type { ModelEntry, Surface } from "@/generation/catalog"
 import { useProjects } from "@/lib/studio/projects"
-import {
-  uploadAsset,
-  useUploads,
-  type AssetSelection,
-} from "@/lib/studio/uploads"
-import { useRuns } from "@/lib/studio/use-runs"
+import { useStudioDock, type DockProps } from "@/lib/studio/use-studio-dock"
 import { cn } from "@/lib/utils"
 
 /**
@@ -76,11 +47,6 @@ const HERO_GLOW =
 const HERO_DOTS = "radial-gradient(rgba(255,255,255,0.2) 1px, transparent 1px)"
 const HERO_DOTS_MASK =
   "radial-gradient(55% 70% at 50% 0%, #000 0%, rgba(0,0,0,0.35) 45%, transparent 75%)"
-
-type DockProps = Omit<
-  ComponentProps<typeof StudioPromptBox>,
-  "className" | "skin"
->
 
 function heroImages(items: GalleryItem[]): readonly [string, string, string] {
   const ready = items
@@ -287,96 +253,25 @@ export function StudioTemplate({
 }: StudioTemplateProps) {
   const [view, setView] = useState<StudioView>({ kind: initialView })
   const [collapsed, setCollapsed] = useState(false)
-  const [prompt, setPrompt] = useState("")
-  const [media, setMedia] = useState<MediaItem[]>([])
-  const [keyOpen, setKeyOpen] = useState(false)
-  const [keyConfigured, setKeyConfigured] = useState(false)
-  const [canceling, setCanceling] = useState(false)
-  const [localError, setLocalError] = useState<string | null>(null)
-
-  const surface = useActive((s) => s.surface)
-  const modelId = useActive((s) => s.model)
-  const setActiveModel = useActive((s) => s.setModel)
-  const settingsByModel = useSettings((s) => s.byModel)
-  const setSetting = useSettings((s) => s.set)
   const projectsStore = useProjects()
-  const uploads = useUploads((s) => s.items)
-  const runs = useRuns()
+  const projectId = view.kind === "project" ? view.projectId : undefined
 
-  const surfaces = useMemo(
-    () =>
-      (["video", "image"] as Surface[]).filter((s) =>
-        MODELS.some((m) => m.surface === s)
-      ),
-    []
-  )
-  const models = useMemo(
-    () => MODELS.filter((m) => m.surface === surface),
-    [surface]
-  )
-  const model = useMemo(() => {
-    try {
-      return getModel(modelId)
-    } catch {
-      return models[0] ?? MODELS[0]!
-    }
-  }, [modelId, models])
-  const settings = useMemo(
-    () => settingsByModel[model.id] ?? {},
-    [settingsByModel, model.id]
-  )
-  const inputMode = inferInputMode(model, media)
-  const prepared = useMemo(() => {
-    try {
-      const plane: GenerationPlane = {
-        model: model.id,
-        inputMode,
-        prompt: { text: prompt.trim() },
-        media: groupMedia(media),
-        settings: parseSettings(model, settings),
-      }
-      toPlatform(plane)
-      return { plane, error: null }
-    } catch (caught) {
-      return {
-        plane: null,
-        error: caught instanceof Error ? caught.message : String(caught),
-      }
-    }
-  }, [inputMode, media, model, prompt, settings])
-
-  useEffect(() => {
-    void hasPlatformCredentials().then(setKeyConfigured)
-  }, [])
-
-  // The URL picks the model: an explicit model wins, else the route's surface.
-  useEffect(() => {
-    if (initialModel && MODELS.some((m) => m.id === initialModel)) {
-      setActiveModel(initialModel)
-      return
-    }
-    if (routeSurface && useActive.getState().surface !== routeSurface) {
-      const first = MODELS.find((m) => m.surface === routeSurface)
-      if (first) setActiveModel(first.id)
-    }
-  }, [initialModel, routeSurface, setActiveModel])
-
-  const pickModel = useCallback(
-    (id: string) => {
-      setActiveModel(id)
-      onUserModelChange?.(getModel(id))
+  const { dock, runs, galleryItems, key, applyTemplate } = useStudioDock({
+    initialModel,
+    routeSurface,
+    onUserModelChange,
+    projectId,
+    onSubmitted: () => {
+      if (view.kind === "home") setView({ kind: "all" })
+      if (projectId) projectsStore.touch(projectId)
     },
-    [onUserModelChange, setActiveModel]
-  )
+  })
+  const keyOpen = key.open
+  const setKeyOpen = key.setOpen
+  const keyConfigured = key.configured
+  const setKeyConfigured = key.setConfigured
+  const handleUseTemplate = applyTemplate
 
-  const galleryItems = useMemo(
-    () => runs.records.flatMap(runToGalleryItems),
-    [runs.records]
-  )
-  const libraryItems = useMemo(
-    () => [...uploads, ...runs.records.flatMap(runToLibraryItems)],
-    [runs.records, uploads]
-  )
   const byProject = useMemo(() => {
     const map = new Map<string, GalleryItem[]>()
     for (const item of galleryItems) {
@@ -410,128 +305,6 @@ export function StudioTemplate({
     view.kind === "project"
       ? (byProject.get(view.projectId) ?? [])
       : galleryItems
-
-  const generating = runs.running.length > 0
-  const canGenerate =
-    prepared.plane !== null && (prompt.trim().length > 0 || media.length > 0)
-  const missingRequiredInput =
-    model.requiredRoles?.some(
-      (role) => !media.some((item) => item.role === role)
-    ) ||
-    (model.requirePrompt && !prompt.trim())
-
-  const handleGenerate = useCallback(() => {
-    if (!canGenerate || generating || !prepared.plane) return
-    setLocalError(null)
-    if (!keyConfigured) {
-      setKeyOpen(true)
-      return
-    }
-    const projectId = view.kind === "project" ? view.projectId : undefined
-    void runs.submit(prepared.plane, projectId).then((record) => {
-      if (record && view.kind === "home") setView({ kind: "all" })
-      if (record && projectId) projectsStore.touch(projectId)
-    })
-  }, [
-    canGenerate,
-    generating,
-    keyConfigured,
-    prepared.plane,
-    projectsStore,
-    runs,
-    view,
-  ])
-
-  const handleCancel = useCallback(() => {
-    if (!generating || canceling) return
-    setCanceling(true)
-    void Promise.all(runs.running.map((r) => runs.cancel(r.id))).finally(() =>
-      setCanceling(false)
-    )
-  }, [canceling, generating, runs])
-
-  const handleUseTemplate = (t: TemplateItem) => {
-    setPrompt(t.prompt)
-    if (t.modelId && MODELS.some((m) => m.id === t.modelId)) {
-      const target = getModel(t.modelId)
-      pickModel(target.id)
-      if (t.settings) setSetting(target.id, t.settings)
-    } else if (t.kind !== surface && surfaces.includes(t.kind)) {
-      changeSurface(t.kind)
-    }
-  }
-
-  // setModel derives the surface from the model, so switching surface = picking its first model.
-  const changeSurface = (next: Surface) => {
-    const first = MODELS.find((m) => m.surface === next)
-    if (first) pickModel(first.id)
-  }
-
-  const dock: DockProps = {
-    surfaces,
-    surface,
-    onSurfaceChange: changeSurface,
-    models,
-    model,
-    onModelChange: (id) => {
-      setLocalError(null)
-      pickModel(id)
-    },
-    settings,
-    onSettingChange: (key, value) => setSetting(model.id, { [key]: value }),
-    inputMode,
-    media,
-    onMediaAdd: (role: MediaRole | "auto", selection: AssetSelection[]) => {
-      const selected = selection.map((item) => ({
-        id: item.id,
-        url: item.src,
-        kind: item.kind,
-        name: item.name,
-      }))
-      const roles = inputRoles(model, inputMode)
-      const next =
-        role === "auto"
-          ? mergeReferences(media, selected, roles)
-          : mergeMedia(
-              media,
-              role,
-              selected.map((item) => ({ ...item, role })),
-              roles[role] ?? 0
-            )
-      setLocalError(null)
-      setMedia(next)
-    },
-    onMediaRemove: (id) => {
-      setLocalError(null)
-      setMedia((current) => current.filter((item) => item.id !== id))
-    },
-    onMediaRoleChange: (id, role) => {
-      try {
-        setMedia(changeImageRole(model, media, id, role))
-        setLocalError(null)
-      } catch (caught) {
-        setLocalError(
-          caught instanceof Error
-            ? caught.message
-            : "Could not change the image role."
-        )
-      }
-    },
-    library: { items: libraryItems, onUpload: uploadAsset },
-    prompt,
-    onPromptChange: setPrompt,
-    onGenerate: handleGenerate,
-    onCancel: handleCancel,
-    generating,
-    canceling,
-    generateDisabled: !canGenerate,
-    disabledReason: prepared.error ?? undefined,
-    error:
-      localError ??
-      runs.error ??
-      (!missingRequiredInput && media.length > 0 ? prepared.error : null) ??
-      undefined,
-  }
 
   return (
     <div
