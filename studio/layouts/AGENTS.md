@@ -8,7 +8,7 @@ when adapting; replace their content, not their presence:
 2. **Atmosphere**: `HERO_GLOW` radial glow and `HERO_DOTS` dot-field masked by
    `HERO_DOTS_MASK` behind the hero. Tune colours, keep the depth.
 3. **`HeroComposition`**: three latest ready outputs, falling back to
-   `/presets/placeholder-*.svg` until the product has real media.
+   the abstract covers in `/covers/` until the user has three outputs.
 4. **`StudioPromptBox` dock**: mode rail (surfaces), one headline setting pill,
    the settings dialog pill, one mixed reference picker, compact media chips,
    model-appropriate frame/source slots, and the lime Generate CTA that turns
@@ -26,5 +26,6 @@ Rules:
   shared by Home and feed views. Infer input mode from media; do not fork state.
 - View state is `{ kind: "home" | "all" | "project" }`; a project view filters
   `galleryItems` by `projectId` — do not keep a second history.
-- All shipped presets, hero fallbacks and template copy are placeholders and
-  must be replaced before shipping.
+- Templates come from the Effects catalog (`lib/site/effects.ts`). Their
+  covers and the hero fallbacks are abstract art in the site palette until
+  the studio generates its own previews.

@@ -34,11 +34,11 @@ import { cn } from "@/lib/utils"
  * Explore / My Projects section, and the UserGenerations feed.
  */
 
-// PLACEHOLDER ASSETS — replaced by the app's real outputs as soon as there are three.
+// Abstract covers in the site palette, replaced by the user's own outputs once there are three.
 const HERO_FALLBACKS = [
-  "/presets/placeholder-2.svg",
-  "/presets/placeholder-1.svg",
-  "/presets/placeholder-3.svg",
+  "/covers/abstract-2.svg",
+  "/covers/abstract-1.svg",
+  "/covers/abstract-3.svg",
 ] as const
 
 const HERO_GLOW =

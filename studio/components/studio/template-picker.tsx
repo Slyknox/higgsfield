@@ -1,16 +1,21 @@
-/* eslint-disable @next/next/no-img-element */
 "use client"
 
 import type { KeyboardEvent, ReactNode } from "react"
 import {
-  BatteryFull,
-  Calendar,
-  House,
+  Camera,
+  Package,
+  UserRound,
   WandSparkles,
   type LucideIcon,
 } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
+import { MODELS } from "@/generation/catalog"
+import {
+  availableEffects,
+  type Effect,
+  type EffectCategory,
+} from "@/lib/site/effects"
 import { cn } from "@/lib/utils"
 
 /**
@@ -20,15 +25,6 @@ import { cn } from "@/lib/utils"
  * `ExamplePresets`.
  */
 
-// PLACEHOLDER ASSETS — demo art in /presets/*.svg. An adapted app replaces
-// every template with bespoke, app-specific examples and real preview media.
-const THUMBS = [
-  "/presets/placeholder-1.svg",
-  "/presets/placeholder-2.svg",
-  "/presets/placeholder-3.svg",
-  "/presets/placeholder-4.svg",
-] as const
-
 export interface TemplateItem {
   id: string
   title: string
@@ -36,7 +32,8 @@ export interface TemplateItem {
   /** Free-form filter category used by the picker tabs. */
   category: string
   kind: "image" | "video"
-  images: [string, string, string]
+  /** CSS background for the card's cover. */
+  art: string
   icon: LucideIcon
   /** What the Try action puts in the dock. */
   prompt: string
@@ -45,53 +42,33 @@ export interface TemplateItem {
   settings?: Record<string, unknown>
 }
 
-// PLACEHOLDER content — replace when adapting.
-export const TEMPLATES: TemplateItem[] = [
-  {
-    id: "product-hero",
-    title: "Product hero shot",
-    subtitle: "Studio lighting, larger than life",
-    category: "commercial",
-    kind: "video",
-    images: [THUMBS[0], THUMBS[1], THUMBS[2]],
-    icon: BatteryFull,
-    prompt:
-      "Cinematic product hero shot on a dark studio backdrop, slow orbit, soft rim light, dust particles catching the light.",
-  },
-  {
-    id: "ugc-review",
-    title: "UGC review",
-    subtitle: "Handheld, creator-style",
-    category: "ugc",
-    kind: "video",
-    images: [THUMBS[1], THUMBS[3], THUMBS[0]],
-    icon: WandSparkles,
-    prompt:
-      "Handheld creator-style review filmed on a phone in a sunny kitchen, natural light, casual framing, subtle camera shake.",
-  },
-  {
-    id: "editorial-still",
-    title: "Editorial still",
-    subtitle: "Magazine-grade key visual",
-    category: "commercial",
-    kind: "image",
-    images: [THUMBS[2], THUMBS[0], THUMBS[1]],
-    icon: Calendar,
-    prompt:
-      "Editorial fashion still, 85mm, shallow depth of field, muted palette, single hard light from the left.",
-  },
-  {
-    id: "lifestyle-home",
-    title: "Lifestyle at home",
-    subtitle: "Warm three-shot story",
-    category: "ugc",
-    kind: "image",
-    images: [THUMBS[3], THUMBS[2], THUMBS[0]],
-    icon: House,
-    prompt:
-      "Warm lifestyle photo of a couple at home in the evening, lamp light, film grain, candid moment.",
-  },
-]
+const ICONS: Record<EffectCategory, LucideIcon> = {
+  Camera: Camera,
+  Product: Package,
+  Portrait: UserRound,
+  Stylize: WandSparkles,
+}
+
+/** The studio's Explore examples: one effect from each category. */
+export function templatesFrom(effects: readonly Effect[]): TemplateItem[] {
+  const picked: Effect[] = []
+  for (const e of effects)
+    if (!picked.some((p) => p.category === e.category)) picked.push(e)
+  return picked.map((e) => ({
+    id: e.id,
+    title: e.title,
+    subtitle: e.description,
+    category: e.category.toLowerCase(),
+    kind: e.surface,
+    art: e.art,
+    icon: ICONS[e.category],
+    prompt: e.prompt,
+    modelId: e.modelId,
+    ...(e.settings ? { settings: e.settings } : {}),
+  }))
+}
+
+export const TEMPLATES: TemplateItem[] = templatesFrom(availableEffects(MODELS))
 
 function gradientFromSeed(seed: string): string {
   let hash = 0
@@ -155,29 +132,27 @@ export function TemplateCard({
     >
       <div className="flex h-60 items-stretch gap-1.5">
         {variant === "triptych" ? (
-          template.images.map((src, i) => (
+          TRIPTYCH.map((shape, i) => (
             <div
               key={i}
+              aria-hidden
               className={cn(
                 "min-w-0 flex-1 overflow-hidden border border-white/10",
-                TRIPTYCH[i]
+                shape
               )}
-            >
-              <img
-                src={src}
-                alt={`${template.title} — shot ${i + 1}`}
-                className="size-full object-cover"
-              />
-            </div>
+              style={{
+                backgroundImage: template.art,
+                backgroundSize: "300% 100%",
+                backgroundPosition: `${i * 50}% 0`,
+              }}
+            />
           ))
         ) : (
-          <div className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-white/10">
-            <img
-              src={template.images[0]}
-              alt={template.title}
-              className="size-full object-cover"
-            />
-          </div>
+          <div
+            aria-hidden
+            className="min-w-0 flex-1 overflow-hidden rounded-2xl border border-white/10"
+            style={{ backgroundImage: template.art }}
+          />
         )}
       </div>
       <div className="flex items-center gap-3 px-2 py-1">
