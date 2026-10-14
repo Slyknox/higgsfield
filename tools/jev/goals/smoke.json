@@ -1,0 +1,48 @@
+{
+  "base_url": "http://localhost:3000",
+  "max_steps": 10,
+  "cases": [
+    {
+      "slug": "explore-loads",
+      "path": "/",
+      "goal": "Stop as soon as the home page is visible.",
+      "checks": { "path": "/", "text_includes": ["Every model, one studio", "Try Seedance 2.5"] }
+    },
+    {
+      "slug": "video-menu-model",
+      "path": "/",
+      "goal": "Open the Video menu in the top navigation, then open Kling 3.0 Pro from its Models list. Stop when the video generator is visible.",
+      "checks": { "path": "/video", "query": { "model": "kling-3-pro" }, "text_includes": ["Kling 3.0 Pro"] }
+    },
+    {
+      "slug": "video-menu-feature",
+      "path": "/",
+      "goal": "Open the Video menu in the top navigation and choose Edit Video from its Features list. Stop when the video generator is visible.",
+      "checks": { "path": "/video", "query": { "model": "seedance-2.5-edit" }, "text_includes": ["Seedance 2.5 Edit"] }
+    },
+    {
+      "slug": "image-menu-model",
+      "path": "/",
+      "goal": "Open the Image menu in the top navigation, then open Soul Cinema from its Models list. Stop when the image generator is visible.",
+      "checks": { "path": "/image", "query": { "model": "soul-cinema" }, "text_includes": ["Soul Cinema"] }
+    },
+    {
+      "slug": "deep-link-higgsfield-id",
+      "path": "/video?model=seedance_2_5",
+      "goal": "Stop as soon as the video generator is visible.",
+      "checks": { "path": "/video", "text_includes": ["Seedance 2.5"] }
+    },
+    {
+      "slug": "directory-image-tab",
+      "path": "/",
+      "goal": "Scroll to the list of every model, switch it to the Image tab, and open Flux 2. Stop when the image generator is visible.",
+      "checks": { "path": "/image", "query": { "model": "flux-2" }, "text_includes": ["Flux 2"] }
+    },
+    {
+      "slug": "assets",
+      "path": "/",
+      "goal": "Open Assets from the top navigation. Stop when the assets page is visible.",
+      "checks": { "path": "/assets" }
+    }
+  ]
+}

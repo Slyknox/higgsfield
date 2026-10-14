@@ -1,0 +1,51 @@
+{
+  "allowed_hosts": ["higgsfield.ai", "www.higgsfield.ai"],
+  "max_steps": 12,
+  "pages": [
+    {
+      "slug": "explore",
+      "url": "https://higgsfield.ai/",
+      "goal": "Scroll down through the home page until the footer is visible, then stop. If a cookie banner appears, choose Reject or Decline. Do not click links, offers, sign-in or purchase buttons."
+    },
+    {
+      "slug": "video-menu",
+      "url": "https://higgsfield.ai/",
+      "goal": "Open the Video menu in the top navigation and stop when its Features and Models lists are visible. Do not open any item in the menu."
+    },
+    {
+      "slug": "image-generator",
+      "url": "https://higgsfield.ai/ai/image?model=gpt_image_2",
+      "goal": "Open the model picker of the image generator and stop when the list of models is visible. Do not generate, upload, sign in or buy anything."
+    },
+    {
+      "slug": "video-generator",
+      "url": "https://higgsfield.ai/ai/video?model=seedance_2_5",
+      "goal": "Open the model picker of the video generator and stop when the list of models is visible. Do not generate, upload, sign in or buy anything."
+    },
+    {
+      "slug": "audio",
+      "url": "https://higgsfield.ai/audio",
+      "goal": "Scroll to the bottom of the audio page, then stop. Do not generate, upload, sign in or buy anything."
+    },
+    {
+      "slug": "effects",
+      "url": "https://higgsfield.ai/effects",
+      "goal": "Scroll down two screens of the effects gallery, then stop. Do not open an effect, sign in or buy anything."
+    },
+    {
+      "slug": "community",
+      "url": "https://higgsfield.ai/community",
+      "goal": "Scroll down two screens of the community feed, then stop. Do not open a post, sign in or buy anything."
+    },
+    {
+      "slug": "pricing",
+      "url": "https://higgsfield.ai/pricing",
+      "goal": "Switch the billing period between monthly and annual once, then scroll to the end of the page and stop. Do not click any plan, upgrade or purchase button."
+    },
+    {
+      "slug": "mcp",
+      "url": "https://higgsfield.ai/mcp",
+      "goal": "Select the Claude Code tab, scroll down one screen to the presets list, then stop. Do not copy, install or sign in."
+    }
+  ]
+}
