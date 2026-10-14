@@ -7,6 +7,7 @@ import {
   useState,
   type ChangeEvent,
 } from "react"
+import Link from "next/link"
 import { usePathname, useRouter, useSearchParams } from "next/navigation"
 import {
   ArrowLeftRight,
@@ -45,7 +46,9 @@ import {
   modesFor,
   type ModeId,
 } from "@/lib/site/model-modes"
+import { priceOf } from "@/lib/billing/pricing"
 import { saveDraft, takeDraft } from "@/lib/studio/draft"
+import { useCredits, type Credits } from "@/lib/studio/use-credits"
 import { useStudioDock } from "@/lib/studio/use-studio-dock"
 import { cn } from "@/lib/utils"
 
@@ -202,6 +205,8 @@ export interface GeneratorTemplateProps {
   onUserModelChange?: (model: ModelEntry) => void
   /** Signed-out users are sent to sign in when they press Generate. */
   signedIn: boolean
+  /** Balance and markup for pricing Generate; null while billing is off. */
+  credits?: Credits
   className?: string
 }
 
@@ -216,17 +221,25 @@ export function GeneratorTemplate({
   initialModel,
   onUserModelChange,
   signedIn,
+  credits: initialCredits = null,
   className,
 }: GeneratorTemplateProps) {
   const router = useRouter()
   const pathname = usePathname()
   const params = useSearchParams()
   const [tab, setTab] = useState<"history" | "how">("history")
+  const { credits, refresh: refreshCredits } = useCredits(
+    initialCredits,
+    signedIn
+  )
   const { dock, runs, galleryItems } = useStudioDock({
     initialModel,
     routeSurface: surface,
     onUserModelChange,
-    onSubmitted: () => setTab("history"),
+    onSubmitted: () => {
+      setTab("history")
+      void refreshCredits()
+    },
   })
   const { model, models, settings, onSettingChange } = dock
   const surfaceModels = useMemo(
@@ -274,6 +287,7 @@ export function GeneratorTemplate({
 
   const generating = dock.generating ?? false
   const canceling = dock.canceling ?? false
+  const price = credits ? priceOf(model, settings, credits.markup) : null
 
   return (
     <div
@@ -443,7 +457,20 @@ export function GeneratorTemplate({
               <WandSparkles aria-hidden className="size-4" />
             )}
             {canceling ? "Cancelling…" : generating ? "Cancel" : "Generate"}
+            {price && !generating ? (
+              <span aria-label={`${price.credits} credits`}>
+                ✦ {price.credits}
+              </span>
+            ) : null}
           </button>
+          {credits && signedIn ? (
+            <p className="text-q-caption-sm-regular text-q-text-secondary">
+              {credits.balance} credits left.{" "}
+              <Link href="/account" className="underline underline-offset-2">
+                Account
+              </Link>
+            </p>
+          ) : null}
           {!generating &&
           dock.generateDisabled &&
           dock.disabledReason &&

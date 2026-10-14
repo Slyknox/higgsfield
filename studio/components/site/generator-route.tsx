@@ -8,6 +8,7 @@ import { MODELS, type ModelEntry, type Surface } from "@/generation/catalog"
 import { GeneratorTemplate } from "@/layouts/generator"
 import { StudioTemplate } from "@/layouts/studio"
 import { resolveModelParam } from "@/lib/site/model-query"
+import type { Credits } from "@/lib/studio/use-credits"
 
 const HEADLINES: Record<Surface, string> = {
   video: "Make videos in one click",
@@ -18,10 +19,12 @@ function GeneratorInner({
   surface,
   initialView,
   signedIn,
+  credits,
 }: {
   surface?: Surface
   initialView: "home" | "all"
   signedIn: boolean
+  credits: Credits
 }) {
   const router = useRouter()
   const pathname = usePathname()
@@ -48,6 +51,7 @@ function GeneratorInner({
         initialModel={model?.id}
         onUserModelChange={onUserModelChange}
         signedIn={signedIn}
+        credits={credits}
         className={shell}
       />
     )
@@ -67,10 +71,13 @@ export function GeneratorRoute({
   surface,
   initialView = "home",
   signedIn,
+  credits = null,
 }: {
   surface?: Surface
   initialView?: "home" | "all"
   signedIn: boolean
+  /** Balance and markup for pricing Generate; null while billing is off. */
+  credits?: Credits
 }) {
   return (
     <div style={{ ["--top-nav" as string]: `${TOP_NAV_HEIGHT}px` }}>
@@ -79,6 +86,7 @@ export function GeneratorRoute({
           surface={surface}
           initialView={initialView}
           signedIn={signedIn}
+          credits={credits}
         />
       </Suspense>
     </div>
