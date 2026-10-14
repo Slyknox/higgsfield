@@ -224,6 +224,11 @@ export async function createGeneration(
          where id = $1 and status = 'pending_submit' returning ${COLUMNS}`,
         [row.id, queued.requestId]
       )
+      if (!updated.rows[0]) {
+        // The row was deleted (or ended) while we submitted: nobody will
+        // collect this result, so stop Higgsfield running it.
+        await deps.platform.cancel(queued.requestId).catch(() => undefined)
+      }
       return toDTO(updated.rows[0] ?? row)
     } catch (error) {
       lastError = error
@@ -478,6 +483,13 @@ export async function cancelGeneration(
 ): Promise<GenerationDTO> {
   const row = await owned(deps, userId, id)
   if (isTerminal(row.status)) return toDTO(row)
+  // Without a request id yet, canceling here would refund a job Higgsfield
+  // is about to start (and bill us for).
+  if (row.status === "pending_submit")
+    throw new UserFacingError(
+      "cannot_cancel",
+      "It's still being submitted. Try again in a moment."
+    )
   if (row.hf_request_id) {
     try {
       await deps.platform.cancel(row.hf_request_id)

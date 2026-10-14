@@ -157,3 +157,51 @@ test("admin adjustments are logged and can't go below zero", { skip }, async () 
   assert.equal(entry.reason, "admin");
   assert.equal(entry.note, "Support credit");
 });
+
+test("a generation can't be canceled for a refund while it's still being submitted", { skip }, async () => {
+  const jo = await db.user();
+  // Hold the submit open so the row sits in pending_submit.
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  const slowDeps = {
+    ...paid.deps,
+    platform: { ...paid.deps.platform, submit: async (...args) => { await gate; return paid.deps.platform.submit(...args); } },
+  };
+  const creating = service.createGeneration(slowDeps, jo, plane("[slow] racing"));
+  let row;
+  for (let i = 0; i < 50 && !row; i++) {
+    row = (await db.pool.query("select id from generations where user_id = $1", [jo])).rows[0];
+    if (!row) await wait(20);
+  }
+  await assert.rejects(service.cancelGeneration(paid.deps, jo, row.id), { code: "cannot_cancel" });
+  release();
+  const created = await creating;
+  assert.equal(created.status, "queued");
+  assert.equal(await balance(jo), 1000 - 206, "no refund for work that runs");
+  await service.cancelGeneration(paid.deps, jo, created.id);
+  assert.equal(await balance(jo), 1000);
+});
+
+test("a submit that finishes after its row is gone is canceled on Higgsfield", { skip }, async () => {
+  const kim = await db.user();
+  let release;
+  const gate = new Promise((r) => { release = r; });
+  let requestId;
+  const slowDeps = {
+    ...paid.deps,
+    platform: {
+      ...paid.deps.platform,
+      submit: async (...args) => { await gate; const q = await paid.deps.platform.submit(...args); requestId = q.requestId; return q; },
+    },
+  };
+  const creating = service.createGeneration(slowDeps, kim, plane("[slow] orphan"));
+  let row;
+  for (let i = 0; i < 50 && !row; i++) {
+    row = (await db.pool.query("select id from generations where user_id = $1", [kim])).rows[0];
+    if (!row) await wait(20);
+  }
+  await db.pool.query("delete from generations where id = $1", [row.id]);
+  release();
+  await creating;
+  assert.equal((await paid.deps.platform.status(requestId)).status, "canceled");
+});
