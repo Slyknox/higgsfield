@@ -5,6 +5,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation"
 
 import { TOP_NAV_HEIGHT } from "@/components/site/top-nav"
 import { MODELS, type ModelEntry, type Surface } from "@/generation/catalog"
+import { GeneratorTemplate } from "@/layouts/generator"
 import { StudioTemplate } from "@/layouts/studio"
 import { resolveModelParam } from "@/lib/site/model-query"
 
@@ -36,15 +37,24 @@ function GeneratorInner({
     [pathname, router, surface]
   )
 
+  const shell = "h-[calc(100dvh-var(--top-nav))]"
+  if (surface)
+    return (
+      <GeneratorTemplate
+        surface={surface}
+        headline={HEADLINES[surface]}
+        initialModel={model?.id}
+        onUserModelChange={onUserModelChange}
+        className={shell}
+      />
+    )
   return (
     <StudioTemplate
       title="Studio"
-      headline={surface ? HEADLINES[surface] : undefined}
       initialModel={model?.id}
-      routeSurface={surface}
       initialView={initialView}
       onUserModelChange={onUserModelChange}
-      className="h-[calc(100dvh-var(--top-nav))]"
+      className={shell}
     />
   )
 }
