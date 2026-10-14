@@ -15,6 +15,7 @@ import {
   MoveRight,
   Repeat,
   Scissors,
+  ShieldCheck,
   UserRound,
   type LucideIcon,
 } from "lucide-react"
@@ -207,7 +208,7 @@ const linkClass = (active: boolean) =>
 
 /**
  * TopNav — the site header: brand, Explore, Image and Video (each opening a
- * features + models menu), and Assets. Collapses into one menu on narrow screens.
+ * features + models menu), Effects and Assets. Collapses into one menu on narrow screens.
  */
 function AccountMenu({ user }: { user: NavUser }) {
   const [pending, startTransition] = useTransition()
@@ -236,6 +237,12 @@ function AccountMenu({ user }: { user: NavUser }) {
           <UserRound aria-hidden />
           Account
         </DropdownMenuItem>
+        {user.role === "admin" ? (
+          <DropdownMenuItem render={<Link href="/admin" />}>
+            <ShieldCheck aria-hidden />
+            Admin
+          </DropdownMenuItem>
+        ) : null}
         <DropdownMenuItem
           disabled={pending}
           onClick={() => startTransition(() => signOutAction())}
@@ -286,6 +293,14 @@ export function TopNav({ user }: { user: NavUser | null }) {
               </NavigationMenu.Content>
             </NavigationMenu.Item>
           ))}
+          <NavigationMenu.Item>
+            <NavigationMenu.Link
+              render={<Link href="/effects" />}
+              className={linkClass(isActive("/effects"))}
+            >
+              Effects
+            </NavigationMenu.Link>
+          </NavigationMenu.Item>
         </NavigationMenu.List>
         <NavigationMenu.Portal>
           <NavigationMenu.Positioner
@@ -360,6 +375,9 @@ export function TopNav({ user }: { user: NavUser | null }) {
                 {f.label}
               </DropdownMenuItem>
             ))}
+            <DropdownMenuItem render={<Link href="/effects" />}>
+              Effects
+            </DropdownMenuItem>
             <DropdownMenuItem render={<Link href="/assets" />}>
               Assets
             </DropdownMenuItem>
