@@ -18,16 +18,29 @@ export type LedgerEntry = {
   createdAt: number
 }
 
-/** Creates the user's balance on first use, with any sign-up credits. Idempotent. */
+/**
+ * Creates the user's balance on first use. Sign-up credits go to each email
+ * address once, ever: `signup_grants` outlives account deletion. Idempotent.
+ */
 export async function ensureAccount(
   db: Queryable,
   userId: number,
   signupCredits = 0
 ): Promise<void> {
   const credits = Math.max(0, Math.floor(signupCredits))
+  // One statement. Two first loads racing can at worst record the grant
+  // without paying it; they can never pay it twice.
   await db.query(
-    `with b as (
-       insert into credit_balances (user_id, balance) values ($1, $2)
+    `with g as (
+       insert into signup_grants (email_hash)
+       select encode(sha256(convert_to(lower(u.email), 'UTF8')), 'hex') from users u
+       where u.id = $1 and $2 > 0 and u.email is not null
+         and not exists (select 1 from credit_balances c where c.user_id = $1)
+       on conflict (email_hash) do nothing
+       returning 1
+     ), b as (
+       insert into credit_balances (user_id, balance)
+       values ($1, case when exists (select 1 from g) then $2 else 0 end)
        on conflict (user_id) do nothing returning user_id, balance
      )
      insert into credit_ledger (user_id, delta, reason, note)

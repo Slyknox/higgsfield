@@ -207,3 +207,16 @@ test("a submit that finishes after its row is gone is canceled on Higgsfield", {
   await creating;
   assert.equal((await paid.deps.platform.status(requestId)).status, "canceled");
 });
+
+test("sign-up credits go to an email address once, even after the account is deleted", { skip }, async () => {
+  const email = "again@example.com";
+  const first = (await db.pool.query("insert into users (email) values ($1) returning id", [email])).rows[0].id;
+  await credits.ensureAccount(db.pool, first, 500);
+  assert.equal(await balance(first), 500);
+  await db.pool.query("delete from users where id = $1", [first]);
+  const second = (await db.pool.query("insert into users (email) values ($1) returning id", ["Again@Example.com"])).rows[0].id;
+  await credits.ensureAccount(db.pool, second, 500);
+  assert.equal(await balance(second), 0);
+  assert.deepEqual(await ledger(second), []);
+});
+
