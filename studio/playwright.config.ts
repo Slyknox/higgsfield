@@ -39,6 +39,10 @@ export default defineConfig({
       STORAGE_DRIVER: "local",
       LOCAL_MEDIA_DIR: ".data/e2e-media",
       HF_WEBHOOK_SECRET: "e2e-webhook-secret-not-for-production-0123456789",
+      // Billing on, so prices, debits and refunds run end to end.
+      BILLING_ENABLED: "true",
+      CREDIT_MARKUP: "2",
+      SIGNUP_CREDITS: "1000",
       NEXT_TELEMETRY_DISABLED: "1",
     },
   },

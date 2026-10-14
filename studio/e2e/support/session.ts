@@ -8,6 +8,9 @@ export async function signIn(
   email: string,
   callbackUrl = "/"
 ) {
+  // Every test signs in from 127.0.0.1; reset the per-network limit (20 an
+  // hour) so the suite isn't capped by it. Per-address limits still apply.
+  await db.query("delete from rate_limits where key like 'magic-link:ip:%'")
   await page.goto(`/login?callbackUrl=${encodeURIComponent(callbackUrl)}`)
   await page.getByLabel("Email").fill(email)
   await page.getByRole("button", { name: "Email me a sign-in link" }).click()
