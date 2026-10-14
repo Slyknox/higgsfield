@@ -14,7 +14,8 @@
     "test": "node --test tests/*.test.mjs",
     "models": "node scripts/sync-models.mjs",
     "db:migrate": "node --env-file-if-exists=.env.local scripts/db-migrate.mjs",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "admin:role": "node --env-file-if-exists=.env.local scripts/set-role.mjs"
   },
   "dependencies": {
     "@auth/pg-adapter": "1.11.3",
