@@ -89,6 +89,85 @@ recommend before launch, and the decisions only the owner can make. Updated
     (Phase 7). Never use Higgsfield's media or copy; `ui-inventory.md` notes are
     for structure only.
 
+## What's still missing
+
+Everything not yet built, by priority. **P0** blocks a public launch, **P1**
+should follow within weeks, **P2** can wait.
+
+### Core product
+
+| Item | Priority | Notes |
+|---|---|---|
+| Server-side generation with the platform key | P0 | Phase 3, in progress. Removes the per-user key box. |
+| Generation history in Postgres, owned per user | P0 | Phase 3. Today history lives in each browser. |
+| Higgsfield webhook + reconciler + R2 copy | P0 | Phase 3. Outputs expire on Higgsfield after about 7 days. |
+| Credits, pricing, Stripe Checkout, Portal, webhooks | P0 | Phase 5. Needs your prices. |
+| Pricing page, Account page (balance, history, plan) | P0 | After Phase 5. |
+| Reference uploads tied to users, size and rate limits | P0 | Phase 3. |
+| Projects in Postgres (today: browser only) | P1 | |
+| Audio surface (Seed Audio, TTS, music) | P1 | Needs model schemas from docs.higgsfield.ai. |
+| Effects / presets gallery with our own covers | P1 | Phase 7 content. |
+| Community feed (publish, report, moderate) | P2 | Adds moderation load; launch without it. |
+| Upscale, background removal, outpaint | P2 | Only if the REST API exposes them. |
+| Admin panel (users, credits, generations, moderation) | P1 | Needed before the first support ticket. |
+
+### Legal and trust & safety
+
+| Item | Priority | Notes |
+|---|---|---|
+| Written resale permission from Higgsfield | P0 | The business model depends on it. |
+| Terms of Service, Privacy Policy, Acceptable Use Policy | P0 | Have a lawyer review; AI-generated likeness is a live legal area. |
+| Prompt screening before submit, report button, takedown process | P0 | Higgsfield's `nsfw` status is a backstop, not a policy. |
+| Child-safety process | P0 | US platforms that host user content must report child sexual abuse material to NCMEC. Have a written process and a contact. |
+| Cookie consent and analytics opt-in (EU/UK) | P0 if you serve the EU | |
+| Account deletion and data export (GDPR/CCPA) | P1 | Deletes rows, sessions and R2 files. |
+| Age gate (13+ or 18+) | P0 | Decide with your lawyer; affects ToS and sign-up. |
+| Trademark search for the final brand | P0 | |
+
+### Security and abuse
+
+| Item | Priority | Notes |
+|---|---|---|
+| Security headers and Content Security Policy | P0 | Allow only our media hosts, Stripe and Higgsfield uploads. |
+| Per-user generation rate and concurrency limits | P0 | Phase 3 (concurrency) and Phase 5 (spend). |
+| Bot protection on sign-in (Cloudflare Turnstile) | P1 | Rate limits exist; Turnstile stops scripted sign-ups. |
+| Disposable-email blocking for sign-up bonuses | P1 | Only matters once free credits exist. |
+| Daily spend cap per user, Stripe Radar | P0 | Stops a stolen card draining your Higgsfield balance. |
+| Dependency and secret scanning (Dependabot, GitHub secret scanning) | P1 | Free on GitHub; turn on in the new repo. |
+| Review `next-auth` beta pin each release | P1 | v5 is still beta on npm. |
+
+### Operations
+
+| Item | Priority | Notes |
+|---|---|---|
+| Error tracking (Sentry) and structured logs | P0 | Logs must never contain keys, signed URLs or magic links. |
+| Uptime monitoring and alerts | P1 | Site, webhook endpoint, Stripe webhook. |
+| Higgsfield balance alert | P0 | An empty balance fails every user's generation at once. |
+| Staging environment (Vercel Preview + Supabase branch) | P1 | Test migrations before production. |
+| Database backups (Supabase point-in-time recovery) | P1 | Paid Supabase add-on; worth it once you take payments. |
+| Email deliverability (SPF, DKIM, DMARC on your domain) | P0 | Without them magic links land in spam. |
+| Migrations in the deploy pipeline | P1 | Today `pnpm db:migrate` runs by hand. |
+
+### Business and billing
+
+| Item | Priority | Notes |
+|---|---|---|
+| Final prices, credit markup, free credits | P0 | Your decision; see Pricing above. |
+| Sales tax / VAT (Stripe Tax) | P0 | Required in many places for digital goods. |
+| Refund and chargeback policy | P0 | Credits for failed generations are refunded automatically. |
+| Receipts and invoices | P1 | Stripe sends receipts; add your own "credits added" email. |
+| Support inbox and help pages | P1 | |
+
+### Quality
+
+| Item | Priority | Notes |
+|---|---|---|
+| Live test of every model family with the real key | P0 | Only Seedance 2.5's request shape is tested so far, offline. |
+| `docs/model-catalog.md` checked against docs.higgsfield.ai | P0 | Allow that host in the environment settings. |
+| Accessibility pass (keyboard, contrast, screen reader) | P1 | |
+| SEO: metadata, Open Graph images, sitemap | P1 | |
+| Load test of submit, status and webhook routes | P2 | Before paid marketing. |
+
 ## Questions for you
 
 Decisions that block later phases, roughly in the order they're needed:
